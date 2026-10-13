@@ -1,7 +1,6 @@
 ---
 name: moqui-device-config-designer
 description: Use when generating or validating PLC config or txtrecipe templates such as `*.HvacDeviceConfig.txtrecipe` or `*.DeviceConfig.txtrecipe`. This internal skill derives config structure from DeviceFacade declarations, provides example templates, and supports tests or installations that use a PLC or CODESYS HMI without Moqui as the primary machine UI.
-compatibility: Requires Python 3.14+
 license: ../../LICENSE.md
 metadata:
   author: moqui-industrial

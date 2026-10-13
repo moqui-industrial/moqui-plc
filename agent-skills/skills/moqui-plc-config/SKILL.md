@@ -1,7 +1,6 @@
 ---
 name: moqui-plc-config
 description: Use when configuring moqui-plc framework constants in MoquiConf.gvl. This skill runs a guided section-by-section workflow, asks only the relevant configuration questions, skips protocol sections that do not apply, and prepares reviewable values for the constants declared in MoquiConf.gvl.
-compatibility: Requires Python 3.14+
 license: ../../LICENSE.md
 metadata:
   author: moqui-industrial
