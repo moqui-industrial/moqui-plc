@@ -6,12 +6,12 @@ These instructions apply to the entire `moqui-plc` repository.
 
 Before analysing or changing this industrial workspace:
 
-1. Read `agent-skills/CURRENT_SESSION`.
+1. Read `codegen/CURRENT_SESSION`.
 2. If it names a session, open
-   `agent-skills/output/sessions/<session-id>/session.json`, then read its
+   `codegen/sessions/<session-id>/session.json`, then read its
    `paths.architectureContext` and `notes/resume-summary.md` when present.
 3. Read
-   `agent-skills/skills/moqui-plant-designer/references/project-architecture.md`
+   `.agents/skills/moqui-plant-designer/references/project-architecture.md`
    completely.
 4. Load the component reference appropriate to the task from the same
    `references/` directory:

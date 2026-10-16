@@ -112,12 +112,14 @@ The project is composed of the canonical IEC 61131-3 implementation and its deri
 - **[iec61131](iec61131/moqui)**: The canonical source of truth for the PLC framework and runtime components, exported as a clean, vendor-neutral IEC 61131-3 reference tree.
 - **[simatic-ax](simatic-ax)**: The SIMATIC AX port, generated from the canonical `iec61131` tree with AX-specific overrides.
 - **[iot-firmware](iot-firmware)**: The embedded ESP32/FreeRTOS port, compiled into binary outputs, also derived from the canonical `iec61131` tree.
-- **[agent-skills](agent-skills)**: A model-first, data-driven low-code/no-code solution for system decomposition, survey validation, Moqui XML seed rendering, HiveMind project setup, and reviewed PLC artifact generation.
+- **[.agents/skills](.agents/skills)**: A model-first, data-driven low-code/no-code solution for system decomposition, survey validation, Moqui XML seed rendering, HiveMind project setup, and reviewed PLC artifact generation. The skills follow the `.agents/skills/<name>/SKILL.md` layout used by `moqui/mr-moqui`.
+- **[codegen](codegen)**: The code-generation workspace: resumable sessions and their generated seed data, PLC code, recipes and configuration, including the reviewed example sessions.
 
 For details, requirements, and guides specific to each of these sub-projects, please refer to their respective documentation:
 - [simatic-ax README](simatic-ax/README.md)
 - [iot-firmware README](iot-firmware/README.md)
-- [agent-skills README](agent-skills/README.md)
+- [agent skills README](.agents/README.md)
+- [codegen README](codegen/README.md)
 
 ### Controller and application model
 
@@ -145,7 +147,8 @@ The current platform paths are:
 - `simatic-ax`: the SIMATIC AX port, generated from the canonical IEC tree with a
   limited set of manually maintained AX-specific overrides;
 - `iot-firmware`: the embedded ESP32/FreeRTOS port and its supporting generated code;
-- `agent-skills`: the low-code/no-code agent skills and templates directory.
+- `.agents/skills`: the low-code/no-code agent skills and templates directory;
+- `codegen`: the code-generation workspace (sessions and generated artifacts).
 
 The porting scripts must not treat a generated target as the new source of truth.
 Changes are made first in the CODESYS project or canonical IEC source, then
@@ -207,7 +210,7 @@ workstation. It is deliberately detailed so that a first-time user can verify
 the architecture without configuring physical I/O or a real PLC.
 
 For an interactive version, invoke
-`$moqui-hvac-demo-guide` from [`agent-skills`](agent-skills/README.md#agent-guided-end-to-end-hvac-demo).
+`$moqui-hvac-demo-guide` from [`.agents/skills`](.agents/README.md#agent-guided-end-to-end-hvac-demo).
 The agent checks prerequisites, resumes existing healthy services and requires
 evidence at each checkpoint. The written procedure below remains the canonical
 command reference. This guidance is for the local developer demo only, not for
