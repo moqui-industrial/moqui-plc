@@ -416,6 +416,14 @@ class SkillRegressionTest(unittest.TestCase):
 
         seed_text = seed_path.read_text(encoding="utf-8")
         guide_text = guide_path.read_text(encoding="utf-8")
+        self.assertIn("cargo build --locked", guide_text)
+        self.assertNotIn("quarkusDev", guide_text)
+        java_guide = guide_path.with_name("gateway-startup-guide-java.md")
+        run_ok(PYTHON, "skills/moqui-device-gateway-startup/scripts/render_gateway_startup_guide.py",
+               "--seed", str(seed_path), "--output", str(java_guide), "--gateway-runtime", "quarkus")
+        java_text = java_guide.read_text(encoding="utf-8")
+        self.assertIn("./gradlew quarkusDev", java_text)
+        self.assertNotIn("cargo run", java_text)
         self.assertIn('deviceTypeEnumId="DtEdgeGateway"', seed_text)
         self.assertIn('deviceId="UV_LINE_PLC" deviceName="UV Line CODESYS Application" softwareApplication="UvApplication"', seed_text)
         self.assertIn('purposeEnumId="DgmpProcessPLC"', seed_text)

@@ -78,7 +78,7 @@ The skill should verify:
 - enumerations and purpose fields are coherent
 - request items point to existing parameters
 - each gateway sampling domain resolves to exactly one declared gateway transport
-- MQTT requests define a Camel `paho-mqtt5:` base URI and explicit topics
+- MQTT requests define a `paho-mqtt5:` base URI (also accepted by the Rust gateway) and explicit topics
 - OPC UA requests reference a generated `DeviceConnection` and explicit node IDs
 - each Moqui-side dispatch wrapper targets a gateway Device and references its field-side request by `query`
 - status flows contain ordered states and valid transitions

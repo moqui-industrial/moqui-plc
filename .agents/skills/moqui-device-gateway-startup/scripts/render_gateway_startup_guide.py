@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
@@ -255,7 +256,7 @@ def request_name_of(request: dict) -> str:
     return request.get("requestName") or request.get("deviceRequestName") or ""
 
 
-def render_guide(seed_path: Path, output_path: Path, analysis: dict) -> str:
+def render_guide(seed_path: Path, output_path: Path, analysis: dict, gateway_runtime: str = "rust") -> str:
     lines: list[str] = []
     lines.append("# moqui-device-gateway first-startup guide")
     lines.append("")
@@ -308,32 +309,34 @@ def render_guide(seed_path: Path, output_path: Path, analysis: dict) -> str:
         lines.append("### Start local dependencies")
         lines.append("")
         lines.append("```bash")
-        lines.append("docker compose -f docker/postgres-compose.yml -p moqui-gateway up -d")
-        lines.append("docker compose -f ../moqui-framework/docker/activemq-compose.yml -p moqui-gateway up -d")
+        lines.append("docker compose -f ../moqui-deploy/industrial/moqui-postgres-compose.yml -p moqui up -d moqui-database")
+        lines.append("docker compose -f ../moqui-deploy/industrial/activemq-compose.yml -p moqui-broker up -d")
         lines.append("```")
         lines.append("")
 
+        lines.append("Load the reviewed seed with MR-Moqui master and the industrial components installed (or the corresponding Java framework when selected). Do not replace the model database with the gateway SQL fixture schema.")
+        lines.append("")
         lines.append("### Build and test the gateway")
         lines.append("")
         lines.append("```bash")
-        lines.append("./gradlew clean build")
-        lines.append("./gradlew test")
+        lines.append("cargo build --locked" if gateway_runtime == "rust" else "./gradlew clean build")
+        lines.append("cargo test --locked --test gateway_tests" if gateway_runtime == "rust" else "./gradlew test")
         lines.append("```")
         lines.append("")
 
         lines.append("### Start the gateway")
         lines.append("")
         lines.append("```bash")
-        lines.append(f"GATEWAY_DEVICE_ID={gateway_id} \\")
-        lines.append("./gradlew quarkusDev -Dquarkus.profile=local")
+        lines.append(f"GATEWAY_DEVICE_ID={shlex.quote(gateway_id)} \\")
+        lines.append("APP_PROFILE=local cargo run --locked" if gateway_runtime == "rust" else "./gradlew quarkusDev -Dquarkus.profile=local")
         lines.append("```")
         lines.append("")
 
         lines.append("Equivalent packaged startup:")
         lines.append("")
         lines.append("```bash")
-        lines.append(f"GATEWAY_DEVICE_ID={gateway_id} \\")
-        lines.append("java -Dquarkus.profile=local -jar build/quarkus-app/quarkus-run.jar")
+        lines.append(f"GATEWAY_DEVICE_ID={shlex.quote(gateway_id)} \\")
+        lines.append("APP_PROFILE=local ./target/debug/moqui-device-gateway" if gateway_runtime == "rust" else "java -Dquarkus.profile=local -jar build/quarkus-app/quarkus-run.jar")
         lines.append("```")
         lines.append("")
 
@@ -417,11 +420,16 @@ def render_guide(seed_path: Path, output_path: Path, analysis: dict) -> str:
 
     lines.append("## Useful integration tests from moqui-device-gateway")
     lines.append("")
-    lines.append("- `./gradlew test --tests '*GatewaySeededRouteIntegrationTest' -Dquarkus.profile=integration`")
-    lines.append("- `./gradlew test --tests '*GatewayDeviceGroupSubscriptionDiscoveryTest' -Dquarkus.profile=integration`")
-    lines.append("- `./gradlew test --tests '*PlcLogIngestIntegrationTest' -Dquarkus.profile=integration`")
+    if gateway_runtime == "rust":
+        lines.append("- `cargo test --locked --test integration_containers_test -- --ignored --nocapture`")
+    else:
+        lines.append("- `./gradlew test --tests '*GatewaySeededRouteIntegrationTest' -Dquarkus.profile=integration`")
+        lines.append("- `./gradlew test --tests '*GatewayDeviceGroupSubscriptionDiscoveryTest' -Dquarkus.profile=integration`")
+        lines.append("- `./gradlew test --tests '*PlcLogIngestIntegrationTest' -Dquarkus.profile=integration`")
     lines.append("")
 
+    lines.append("Set DATABASE_URL/LOG_DATABASE_URL and MQTT_USERNAME/MQTT_PASSWORD for the actual test infrastructure. Rust uses the mr-moqui branch; Java/Quarkus uses main (formerly master). See the README of that branch for deployment configuration.")
+    lines.append("")
     lines.append("## Principle")
     lines.append("")
     lines.append("The gateway startup procedure must stay a projection of the data model. If startup fails because scope, requests, or identities are incomplete, repair the modeled data and regenerate.")
@@ -434,6 +442,7 @@ def main() -> int:
     parser.add_argument("--seed", type=Path, help="Reviewed seed XML to inspect")
     parser.add_argument("--session-dir", type=Path, help="Session directory containing seed-data/ and session.json")
     parser.add_argument("--output", type=Path, help="Output Markdown file")
+    parser.add_argument("--gateway-runtime", choices=("rust", "quarkus"), default="rust")
     args = parser.parse_args()
 
     seed_path = resolve_input_seed(args)
@@ -442,7 +451,7 @@ def main() -> int:
 
     model = load_seed_model(seed_path)
     analysis = analyze_model(model)
-    rendered = render_guide(seed_path, output_path, analysis)
+    rendered = render_guide(seed_path, output_path, analysis, args.gateway_runtime)
     output_path.write_text(rendered, encoding="utf-8")
 
     if args.session_dir:

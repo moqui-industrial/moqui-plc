@@ -35,7 +35,7 @@ evolved. Record any project-specific interpretation in the saved session.
 
 ## Platform layers
 
-- `moqui-framework` is both the business-application runtime and the platform
+- `mr-moqui` (Rust, master) or `moqui-framework` (Java) is both the business-application runtime and the platform
   for agentic applications. `moqui-math` and `moqui-device` are runtime
   components whose entities and services materialize the industrial model.
 - The Moqui database (normally PostgreSQL or YugabyteDB in production) remains

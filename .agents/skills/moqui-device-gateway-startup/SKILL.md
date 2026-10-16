@@ -51,6 +51,7 @@ Keep gateway startup model-driven and data-driven:
 ## Helper Script
 
 - `scripts/render_gateway_startup_guide.py`
+  - defaults to the Rust gateway; use `--gateway-runtime quarkus` for Java
   - reads `--seed` or `--session-dir`
   - generates a Markdown first-startup checklist
   - writes by default into `generated-config/gateway-startup-guide.md` when a

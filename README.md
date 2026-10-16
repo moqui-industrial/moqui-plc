@@ -27,7 +27,8 @@ relational schema that governs maintenance, configuration, recipes, audit, and
 lifecycle — the Silverston-lineage model inherited through OFBiz/Moqui. The PLC
 program is a *runtime projection of that model*, the same way
 [moqui-device-gateway](https://github.com/moqui/moqui-device-gateway) projects the
-same model into Apache Camel edge routes.
+same model into edge integrations: Apache Camel routes in the Java gateway,
+or supervised Tokio tasks and async pipelines in the Rust gateway (`mr-moqui`).
 
 That is the claim worth making: not one more code generator fed by a diagram, but
 the **first no-code/low-code automation where the controller is generated from the
@@ -193,11 +194,12 @@ commands, external library namespaces and the files left out per target.
 
 ### Open-source ST compilers (RuSTy, IronPLC)
 
-The canonical tree targets CODESYS, but it can be type-checked with two
+The canonical tree targets CODESYS. Experimental checks are available with two
 open-source compilers written in Rust: [RuSTy](https://github.com/PLC-lang/rusty)
 (ST to native code via LLVM) and [IronPLC](https://github.com/ironplc/ironplc)
-(ST to bytecode). This is an opening for anyone who wants to run moqui-plc on a
-Rust PLC runtime. It is not a runtime.
+(ST to bytecode). This is an opening for simple programs and compiler experiments. These platforms
+do not currently provide the complete PLC runtime/libraries needed to run moqui-plc;
+the complete framework is not supported on either target today.
 
 **The code compiles only when every dependency is satisfied.** The CODESYS
 libraries the code uses (SoftMotion, MQTT, JSON, TLS, recipes, device
@@ -222,7 +224,7 @@ variable list qualifiers, `UNION`, and a few compiler-specific forms), runs the
 compiler, and writes `report.json` with every diagnostic tagged by origin.
 `iec61131/` is never modified.
 
-Current result (RuSTy master, IronPLC 0.249):
+Recorded compiler measurements (RuSTy master, IronPLC 0.249; not a working PLC port):
 
 | | without interfaces | with interfaces |
 |---|---:|---:|
@@ -285,8 +287,9 @@ environment without importing the source tree manually.
 
 ## End-to-End HVAC demo
 
-This walkthrough starts the complete local HVAC data path on one Windows
-workstation. It is deliberately detailed so that a first-time user can verify
+This walkthrough starts the local HVAC data path with CODESYS on Windows.
+MR-Moqui framework commands use Bash on Linux/macOS or a suitable WSL environment;
+configure database/broker addresses for the actual host network. It is deliberately detailed so that a first-time user can verify
 the architecture without configuring physical I/O or a real PLC.
 
 For an interactive version, invoke
@@ -342,7 +345,8 @@ The normal thermostat uses `tempSetpoint +/- tempHysteresis`. `tempMin` and
 Install the following software:
 
 - Docker Desktop;
-- Java 21;
+- Rust/Cargo for MR-Moqui and the Rust gateway (gateway requires Rust 1.99+);
+- Java 21 only when using the Java Moqui framework or Java gateway;
 - CODESYS Development System and `CODESYS Control Win V3 - x64`;
 - Mosquitto command-line clients (`mosquitto_sub` and `mosquitto_pub`).
 
@@ -350,7 +354,8 @@ This guide assumes that the repositories are sibling directories:
 
 ```text
 github-moqui/
-  moqui-framework/
+  mr-moqui/             # Rust framework, master branch
+  moqui-framework/      # optional Java framework
   moqui-device/
   moqui-math/
   moqui-device-gateway/
@@ -358,7 +363,9 @@ github-moqui/
   moqui-plc/
 ```
 
-Install or copy `moqui-device` and `moqui-math` under
+For MR-Moqui, install `mantle-udm`, `moqui-math` and `moqui-device` under
+`mr-moqui/runtime/component`, with the industrial components on `mr-moqui`.
+For the Java alternative, install the corresponding Java components under
 `moqui-framework/runtime/component` before loading Moqui data. The component
 directories must contain their complete source trees, not only their `data`
 directories.
@@ -376,7 +383,19 @@ docker compose -f .\moqui-deploy\industrial\moqui-postgres-compose.yml -p moqui 
 docker ps --filter "name=moqui-database"
 ```
 
-Wait until the container is running, then prepare and load the Moqui database:
+Wait until the container is running, then choose the framework runtime.
+For **MR-Moqui master**, from its repository root in Bash:
+
+```bash
+export entity_ds_db_conf=postgres entity_ds_host=127.0.0.1 entity_ds_port=5432
+export entity_ds_database=moqui entity_ds_user=moqui entity_ds_password=moqui
+export entity_ds_sslmode=disable  # local demo only
+./moq build --debug
+./moq load --debug seed-initial
+./moq load --debug seed
+```
+
+For the **Java framework alternative**, use PowerShell:
 
 ```powershell
 Set-Location .\moqui-framework
@@ -440,49 +459,60 @@ direction each message belongs to:
 
 ### 5. Start moqui-device-gateway
 
-The quick demo runs Quarkus directly on the host and uses the already loaded
-Moqui PostgreSQL database. It deliberately points both the transactional and
-log datasources at `moqui`; a production deployment may use a separate
-`moqui-log`/TimescaleDB database.
+Choose one gateway implementation. The Rust gateway runs independently of
+MR-Moqui; it reads the same Moqui-owned PostgreSQL model. The CODESYS PLC does
+not need RuSTy or IronPLC to communicate with it.
 
-Open another PowerShell terminal:
+| Gateway | Branch | Build, configuration and deployment |
+|---|---|---|
+| Rust / Tokio / Axum | `mr-moqui` | [Rust gateway README](https://github.com/moqui/moqui-device-gateway/blob/mr-moqui/README.md) |
+| Java / Quarkus / Apache Camel | `main` (formerly `master`) | [Java gateway README](https://github.com/moqui/moqui-device-gateway/blob/main/README.md) |
+
+The gateway README for the chosen branch is authoritative for build and
+configuration. Keep the HVAC-specific settings below when following it.
+The reduced demo uses `moqui` for both transactional and log data; production
+may use a separate `moqui-log`/TimescaleDB database.
+
+For the **Rust gateway**, open another PowerShell terminal:
 
 ```powershell
 Set-Location .\moqui-device-gateway
-$env:QUARKUS_PROFILE="local"
-$env:QUARKUS_DATASOURCE_JDBC_URL="jdbc:postgresql://localhost:5432/moqui"
-$env:QUARKUS_DATASOURCE_USERNAME="moqui"
-$env:QUARKUS_DATASOURCE_PASSWORD="moqui"
-$env:QUARKUS_DATASOURCE_LOG_JDBC_URL="jdbc:postgresql://localhost:5432/moqui"
-$env:QUARKUS_DATASOURCE_LOG_USERNAME="moqui"
-$env:QUARKUS_DATASOURCE_LOG_PASSWORD="moqui"
-$env:MQTT_BROKER_URL="tcp://localhost:1883"
+git switch mr-moqui
+$env:APP_PROFILE="local"
+$env:DATABASE_URL="postgres://moqui:moqui@localhost:5432/moqui"
+$env:LOG_DATABASE_URL=$env:DATABASE_URL
 $env:GATEWAY_DEVICE_ID="HVAC_DEMO_GATEWAY"
-$env:MQTT_WRITE_AFTERPUBLISH_ENABLED="false"
-.\gradlew.bat quarkusDev
+$env:MQTT_BROKER_URL="tcp://localhost:1883"
+$env:MQTT_USERNAME="artemis"
+$env:MQTT_PASSWORD="artemis"
+$env:MQTT_WRITE_AFTER_PUBLISH_ENABLED="false"
+$env:PLC_LOG_ROUTE_AUTO_STARTUP="true"
+$env:PLC_LOG_CONSUME_URI="paho-mqtt5:moqui-plc?brokerUrl=tcp://localhost:1883"
+cargo run --locked
 ```
 
-The gateway listens on port `8081`. In a separate terminal, verify its health:
+For **Java/Quarkus**, follow the Java gateway README and start `quarkusDev` with
+the `local` profile. Use the same `HVAC_DEMO_GATEWAY` identity, transactional/log
+database, broker, and PLC-log topic. Its datasource variables use the
+`QUARKUS_DATASOURCE_*` names. Disable the optional post-publish callback when
+the Moqui HTTP server is not running.
+
+Both implementations listen on `8081`. Check readiness in another terminal:
 
 ```powershell
-Invoke-RestMethod http://localhost:8081/q/health
+Invoke-RestMethod http://localhost:8081/q/health/ready
 ```
 
-The status must be `UP`. `MQTT_WRITE_AFTERPUBLISH_ENABLED=false` is appropriate
-only for this reduced demo, where the Moqui web runtime on port 8080 is not
-running. It prevents the optional post-publish callback from failing after the
-MQTT message has already been delivered.
-
-The official seed deliberately contains no MQTT password. Until deployment-side
-credential injection is configured, apply this local, test-only override and
-request an initial full snapshot:
+The result must be `UP`. For the Rust gateway the deployment credentials above
+supply broker authentication without adding passwords to the model. Request
+an initial full live snapshot in this local demo:
 
 ```powershell
-docker exec moqui-database psql -U moqui -d moqui -c "UPDATE device_request SET broker_uri='paho-mqtt5:?brokerUrl=tcp://localhost:1883&qos=1&userName=artemis&password=artemis', only_changed_parameters='N' WHERE request_name='HVAC_DEMO_LiveParametersWrite';"
+docker exec moqui-database psql -U moqui -d moqui -c "UPDATE device_request SET only_changed_parameters='N' WHERE request_name='HVAC_DEMO_LiveParametersWrite';"
 ```
 
-Never copy that secret-bearing URI into official seed data or a production
-database.
+The `local` profile is for the development demo. With production API auth,
+provide `X-API-Key` or `Authorization: Bearer ...` on every modifying call.
 
 ### 6. Configure and run CODESYS
 
@@ -629,7 +659,7 @@ The first query should contain the value most recently observed by
   parameters through Moqui services and may use `onlyChangedParameters=Y`.
 - **REST publishes but then fails:** the Moqui callback is probably enabled
   while the Moqui web runtime is absent; restart with
-  `MQTT_WRITE_AFTERPUBLISH_ENABLED=false` for this demo only.
+  `MQTT_WRITE_AFTER_PUBLISH_ENABLED=false` for the Rust gateway in this demo only.
 - **CODESYS receives nothing:** use Control Win rather than Simulation, confirm
   `brokerUrl`, `liveParamsSubTopic`, the `MqttParameterSubTask` program call and
   `connectionFactory.connected=TRUE`.
@@ -674,7 +704,8 @@ To run the **robot arm with 6 DOF** test suite, you need to link:
 
 - **[moqui-device](https://github.com/moqui/moqui-device)** — the device data model and status flows this framework generates from.
 - **[moqui-math](https://github.com/moqui/moqui-math)** — the dual math model: trajectories, controllers, model lifecycle.
-- **[moqui-device-gateway](https://github.com/moqui/moqui-device-gateway)** — projects the same model into Apache Camel edge routes.
+- **[moqui-device-gateway](https://github.com/moqui/moqui-device-gateway)** — projects the same model into edge integrations: Apache Camel routes in the Java gateway,
+  or supervised Tokio tasks and async pipelines in the Rust gateway (`mr-moqui`).
 
 ## License
 

@@ -15,7 +15,7 @@ Load this reference only after a checkpoint fails. Use the root
 - Verify both datasource URLs and PostgreSQL availability.
 - Verify `GATEWAY_DEVICE_ID=HVAC_DEMO_GATEWAY`.
 - Verify the HVAC seed exists in the database.
-- Read the actual Quarkus port from startup output.
+- Read the actual gateway HTTP port from startup output for the selected Rust or Java branch.
 
 ## Gateway request publishes zero rows
 

@@ -1,12 +1,12 @@
 # moqui-device-gateway knowledge
 
 Load this reference for field transport, REST dispatch, startup or end-to-end
-testing. Verify current behavior in `../moqui-device-gateway/README.md`, its
-Quarkus resources, Camel routes, model services and SQL.
+testing. Verify current behavior in `../moqui-device-gateway/README.md`, the selected branch's protocol implementations, model services and SQL.
 
 ## Runtime boundary
 
-The gateway is an external Quarkus/Camel edge process. It prevents asynchronous
+The gateway is an external edge process: Rust/Tokio/Axum on `mr-moqui`,
+or Java/Quarkus/Apache Camel on `main` (formerly `master`). It prevents asynchronous
 PLC traffic from occupying the Moqui runtime, but it does not own a separate
 domain model. It reads the Moqui database—normally PostgreSQL or YugabyteDB—as
 the persistent declaration of devices, requests, items and connections, even
@@ -58,3 +58,12 @@ current gateway before fixing them:
 Keep these gaps distinct from the proven path: gateway REST dispatch published
 20 HVAC live-parameter messages through Artemis and PostgreSQL-backed request
 data. CODESYS consumption/publication remained pending at that checkpoint.
+
+## Rust branch verification (2026-10-16)
+
+The historical HVAC findings above concern the earlier Java gateway checkpoint.
+The Rust branch now uses MQTT v5 acknowledgements, deployment credentials,
+redacted publication URIs, scoped exports/transfers and real SFTP with verified
+host keys. Test current branch behavior before applying historical workarounds.
+RuSTy and IronPLC are experimental compiler openings for simple programs; they
+are not required by the Rust gateway or supported full moqui-plc platforms.

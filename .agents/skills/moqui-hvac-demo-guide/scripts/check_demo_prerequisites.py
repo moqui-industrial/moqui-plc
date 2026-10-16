@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 REPOSITORIES = (
-    "moqui-framework",
+    "mr-moqui",
     "moqui-device",
     "moqui-math",
     "moqui-device-gateway",
@@ -69,13 +69,16 @@ def locate_workspace(explicit: str | None) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", help="Directory containing sibling moqui repositories")
+    parser.add_argument("--framework-runtime", choices=("rust", "java"), default="rust")
+    parser.add_argument("--gateway-runtime", choices=("rust", "quarkus"), default="rust")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     args = parser.parse_args()
 
     workspace = locate_workspace(args.workspace)
     checks: list[dict[str, object]] = []
 
-    for repo in REPOSITORIES:
+    repositories = tuple("moqui-framework" if repo == "mr-moqui" and args.framework_runtime == "java" else repo for repo in REPOSITORIES)
+    for repo in repositories:
         path = workspace / repo
         checks.append({"check": f"repository:{repo}", "ok": path.is_dir(), "detail": str(path)})
 
@@ -88,7 +91,12 @@ def main() -> int:
     for name, path in required_files.items():
         checks.append({"check": name, "ok": path.is_file(), "detail": str(path)})
 
-    commands = {name: command_path(name) for name in ("docker", "java", "mosquitto_pub", "mosquitto_sub")}
+    required_commands = ["docker", "mosquitto_pub", "mosquitto_sub"]
+    if args.framework_runtime == "rust" or args.gateway_runtime == "rust":
+        required_commands.append("cargo")
+    if args.framework_runtime == "java" or args.gateway_runtime == "quarkus":
+        required_commands.append("java")
+    commands = {name: command_path(name) for name in required_commands}
     for name, path in commands.items():
         checks.append({"check": f"command:{name}", "ok": path is not None, "detail": path or "not found"})
 
