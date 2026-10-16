@@ -149,3 +149,64 @@ CODESYS_VENDOR_EXTENSION_SYMBOLS = (
     "SMC_GroupPower",
     "SMC_POS_REF",
 )
+
+# ---------------------------------------------------------------------------
+# compile-st.py: compile the canonical tree with open-source ST compilers
+# ---------------------------------------------------------------------------
+#
+# RuSTy and IronPLC have no CODESYS libraries and no library namespaces.
+# compile-st.py copies the canonical tree to codegen/target/<target>/, rewrites
+# the CODESYS dialect into the form each compiler accepts, adds the interface
+# declarations under rust-plc/interfaces/ and runs the compiler. The canonical
+# tree is never modified.
+
+RUST_PLC_ROOT = os.path.join(REPO_ROOT, "rust-plc")
+RUST_PLC_INTERFACES_ROOT = os.path.join(RUST_PLC_ROOT, "interfaces")
+COMPILE_ST_TARGET_ROOT = os.path.join(CODEGEN_ROOT, "target")
+
+COMPILE_ST_TARGETS = ("rusty", "ironplc")
+
+# Compiler executables. An environment variable overrides each default.
+COMPILE_ST_COMMANDS = {
+    "rusty": os.environ.get("MOQUI_PLC_RUSTY", "plc"),
+    "ironplc": os.environ.get("MOQUI_PLC_IRONPLC", "ironplcc"),
+}
+
+# RuSTy declares its standard library in .st headers shipped with the compiler
+# (libs/stdlib/iec61131-st in the RuSTy repository). Set the directory here or
+# in MOQUI_PLC_RUSTY_STDLIB.
+RUSTY_STDLIB_ST_ROOT = os.environ.get("MOQUI_PLC_RUSTY_STDLIB", "")
+
+# CODESYS library namespaces used by the canonical tree. compile-st.py drops
+# the qualifier (MQTT.MQTTClient -> MQTTClient); the declarations under
+# rust-plc/interfaces/ use the unqualified names.
+EXTERNAL_LIBRARY_NAMESPACES = (
+    "CAA",
+    "DED",
+    "IODrvEthernet",
+    "JSON",
+    "MQTT",
+    "NBS",
+    "Recipe_Management",
+    "SysTimeRtc",
+    "Util",
+)
+
+# Qualified names that would collide once the namespace is dropped.
+EXTERNAL_LIBRARY_RENAMED_SYMBOLS = {
+    "JSON.ERROR": "JSON_ERROR",
+    "DED.ERROR": "DED_ERROR",
+}
+
+# Library parameter lists accessed with a qualifier (MQTT.MQTTParam.x).
+EXTERNAL_LIBRARY_PARAMETER_LISTS = (
+    "MQTTParam",
+)
+
+# Files left out per target, relative to the canonical tree.
+# RuSTy has no CONFIGURATION/RESOURCE/TASK: task scheduling belongs to the
+# runtime that hosts the compiled code.
+COMPILE_ST_EXCLUDED_FILES = {
+    "rusty": ("configuration.st",),
+    "ironplc": (),
+}

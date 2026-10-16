@@ -114,12 +114,14 @@ The project is composed of the canonical IEC 61131-3 implementation and its deri
 - **[iot-firmware](iot-firmware)**: The embedded ESP32/FreeRTOS port, compiled into binary outputs, also derived from the canonical `iec61131` tree.
 - **[.agents/skills](.agents/skills)**: A model-first, data-driven low-code/no-code solution for system decomposition, survey validation, Moqui XML seed rendering, HiveMind project setup, and reviewed PLC artifact generation. The skills follow the `.agents/skills/<name>/SKILL.md` layout used by `moqui/mr-moqui`.
 - **[codegen](codegen)**: The code-generation workspace: resumable sessions and their generated seed data, PLC code, recipes and configuration, including the reviewed example sessions.
+- **[rust-plc](rust-plc)**: The opening toward open-source ST compilers (RuSTy, IronPLC) and Rust PLC runtimes: interface declarations of the external dependencies and the compile workflow.
 
 For details, requirements, and guides specific to each of these sub-projects, please refer to their respective documentation:
 - [simatic-ax README](simatic-ax/README.md)
 - [iot-firmware README](iot-firmware/README.md)
 - [agent skills README](.agents/README.md)
 - [codegen README](codegen/README.md)
+- [rust-plc README](rust-plc/README.md)
 
 ### Controller and application model
 
@@ -149,6 +151,8 @@ The current platform paths are:
 - `iot-firmware`: the embedded ESP32/FreeRTOS port and its supporting generated code;
 - `.agents/skills`: the low-code/no-code agent skills and templates directory;
 - `codegen`: the code-generation workspace (sessions and generated artifacts).
+- `rust-plc`: interface declarations for compiling the canonical tree with RuSTy
+  or IronPLC; the compiled output goes to `codegen/target/`.
 
 The porting scripts must not treat a generated target as the new source of truth.
 Changes are made first in the CODESYS project or canonical IEC source, then
@@ -184,7 +188,52 @@ python3 scripts/codesys_namespaces.py check iec61131
 scripts: repository paths, export defaults and the CODESYS symbol table. It is
 plain Python data, not TOML, because `export-codesys.py` runs inside the
 CODESYS IronPython 2.7 engine. Skill scripts under `.agents/skills` import it
-from `scripts/`.
+from `scripts/`. It also holds the settings of `compile-st.py`: compiler
+commands, external library namespaces and the files left out per target.
+
+### Open-source ST compilers (RuSTy, IronPLC)
+
+The canonical tree targets CODESYS, but it can be type-checked with two
+open-source compilers written in Rust: [RuSTy](https://github.com/PLC-lang/rusty)
+(ST to native code via LLVM) and [IronPLC](https://github.com/ironplc/ironplc)
+(ST to bytecode). This is an opening for anyone who wants to run moqui-plc on a
+Rust PLC runtime. It is not a runtime.
+
+**The code compiles only when every dependency is satisfied.** The CODESYS
+libraries the code uses (SoftMotion, MQTT, JSON, TLS, recipes, device
+diagnosis, real-time clock, Util) and the objects of the CODESYS device tree
+do not exist outside CODESYS. Whoever builds the runtime has to provide them.
+`rust-plc/interfaces/` declares their signatures, with no implementation and no
+vendor code, so the compiler can check the moqui-plc code against them:
+
+```bash
+export MOQUI_PLC_RUSTY=~/rusty/target/release/plc
+export MOQUI_PLC_RUSTY_STDLIB=~/rusty/libs/stdlib/iec61131-st
+export MOQUI_PLC_IRONPLC=~/ironplc/compiler/target/release/ironplcc
+
+python3 scripts/compile-st.py --target rusty
+python3 scripts/compile-st.py --target ironplc
+python3 scripts/compile-st.py --target rusty --no-interfaces   # measure the missing dependencies
+```
+
+The script copies `iec61131/` to `codegen/target/<target>/src/`, rewrites the
+CODESYS dialect on the copy (`scripts/st_dialect.py`: library namespaces, global
+variable list qualifiers, `UNION`, and a few compiler-specific forms), runs the
+compiler, and writes `report.json` with every diagnostic tagged by origin.
+`iec61131/` is never modified.
+
+Current result (RuSTy master, IronPLC 0.249):
+
+| | without interfaces | with interfaces |
+|---|---:|---:|
+| RuSTy errors | 1256 | 17, all dialect differences |
+| IronPLC errors | 697 | 512, mostly cascades of 23 files IronPLC cannot parse |
+
+The compilations also surfaced points in the code itself: the `TIME` unit
+(milliseconds in CODESYS, nanoseconds in RuSTy) and the integer-valued
+conversion in `doubleWordToReal`/`longWordToLongReal`. See
+[rust-plc/README.md](rust-plc/README.md) for the full list of rewrites,
+remaining errors, findings, and what a Rust runtime has to add.
 
 `codesys/moqui.projectarchive` is a permanent repository artifact and must always be kept.
 It is not a generated build directory and must not be removed during repository
