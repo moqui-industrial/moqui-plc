@@ -365,8 +365,9 @@ github-moqui/
 
 For MR-Moqui, install `moqui-math` and `moqui-device` under
 `mr-moqui/runtime/component`, with the industrial components on `mr-moqui`.
-`mantle-udm` is needed only if running the canonical moqui-device test suite;
-follow that component's test README for its temporary test dependency.
+`mantle-udm` is needed only for moqui-device's optional WorkEffort/Measurement
+telemetry test fixture; the base suite needs no Mantle. Follow that component's
+test README for the explicit fixture load and temporary test dependency.
 For the Java alternative, install the corresponding Java components under
 `moqui-framework/runtime/component` before loading Moqui data. The component
 directories must contain their complete source trees, not only their `data`
