@@ -29,11 +29,18 @@ if str(PLANT_SCRIPT_DIR) not in sys.path:
 
 from survey_validation import load_upstream_survey_model, validate_fsm_surveys, validate_upstream_surveys
 
+REPO_SCRIPTS_DIR = Path(__file__).resolve().parents[4] / "scripts"
+if str(REPO_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(REPO_SCRIPTS_DIR))
+
+import moqui_plc_config  # noqa: E402
+from codesys_namespaces import to_codesys  # noqa: E402
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 DEFAULT_TEMPLATES = SKILL_DIR / "references" / "plc-codegen-templates"
-DEFAULT_FRAMEWORK = Path(__file__).resolve().parents[4] / "iec61131" / "moqui" / "framework"
+DEFAULT_FRAMEWORK = Path(moqui_plc_config.IEC61131_FRAMEWORK_ROOT)
 
 
 def replace_text(path: Path, replacements: dict[str, str]) -> None:
@@ -270,6 +277,13 @@ def render_application(
         if not framework_source.is_dir():
             raise SystemExit(f"Framework source not found: {framework_source}")
         shutil.copytree(framework_source, application_root / "framework", dirs_exist_ok=True)
+        # The canonical tree uses vendor-neutral motion names; a CODESYS application
+        # needs the SoftMotion library qualifiers back (moqui_plc_config.py).
+        for st_path in (application_root / "framework").rglob("*.st"):
+            text = st_path.read_text(encoding="utf-8")
+            codesys_text = to_codesys(text)
+            if codesys_text != text:
+                st_path.write_text(codesys_text, encoding="utf-8")
 
     trace_rows.insert(
         0,

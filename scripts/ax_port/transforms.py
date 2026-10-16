@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
+from codesys_namespaces import split_code
+
 
 @dataclass
 class TransformResult:
@@ -15,9 +17,21 @@ class TransformResult:
 REFERENCE_TO_RE = re.compile(r"\bREFERENCE\s+TO\b")
 MC_DIRECTION_RE = re.compile(r"\bMC_DIRECTION\b")
 
-# CODESYS motion namespace → AX compat namespace substitutions.
-# Applied mechanically to all files; matches are scoped to motion files by the prefixes used.
+# Motion symbol → AX compat namespace substitutions.
+# The canonical tree uses the vendor-neutral names from moqui_plc_config.py
+# (export-codesys.py strips the CODESYS SM3_* qualifiers). The CODESYS-qualified
+# spellings are still accepted so an export made with --keep-codesys-namespaces
+# converts the same way.
 MOTION_NAMESPACE_REPLACEMENTS: list[tuple[str, str]] = [
+    ("SMC_COORD_SYSTEM", "CoordMotion.SMC_COORD_SYSTEM"),
+    ("MC_TRANSITION_MODE", "CoordMotion.MC_TRANSITION_MODE"),
+    ("SMC_POS_REF", "CoordMotion.SMC_POS_REF"),
+    ("SMC_CIRC_MODE", "CoordMotion.SMC_CIRC_MODE"),
+    ("MC_CIRC_PATHCHOICE", "CoordMotion.MC_CIRC_PATHCHOICE"),
+    ("AXES_GROUP_REF", "TO_Kinematics"),
+    ("MC_BUFFER_MODE", "Motion.MC_BUFFER_MODE"),
+]
+LEGACY_MOTION_NAMESPACE_REPLACEMENTS: list[tuple[str, str]] = [
     ("SM3_Robotics.SMC_COORD_SYSTEM", "CoordMotion.SMC_COORD_SYSTEM"),
     ("SM3_Robotics.MC_TRANSITION_MODE", "CoordMotion.MC_TRANSITION_MODE"),
     ("SM3_Robotics.SMC_POS_REF", "CoordMotion.SMC_POS_REF"),
@@ -26,6 +40,12 @@ MOTION_NAMESPACE_REPLACEMENTS: list[tuple[str, str]] = [
     ("SM3_Robotics.AXIS_GROUP_REF_SM3", "TO_Kinematics"),
     ("SM3_Basic.MC_BUFFER_MODE", "Motion.MC_BUFFER_MODE"),
 ]
+_MOTION_SYMBOL_RE = re.compile(
+    r"(?<![A-Za-z0-9_.])("
+    + "|".join(re.escape(source) for source, _target in MOTION_NAMESPACE_REPLACEMENTS)
+    + r")\b"
+)
+_MOTION_TARGETS = dict(MOTION_NAMESPACE_REPLACEMENTS)
 CONTROL_END_RE = re.compile(r"\b(END_IF|END_CASE|END_FOR|END_WHILE|END_REPEAT)\b(?!\s*;)")
 REF_ASSIGN_RE = re.compile(
     r"(?P<indent>^[ \t]*)(?P<lhs>[A-Za-z_][A-Za-z0-9_\.\[\]]*)\s+REF=\s+(?P<rhs>[^;\r\n]+);",
@@ -160,11 +180,17 @@ def convert_enum_access(text: str, enum_type_names: Iterable[str]) -> tuple[str,
 
 def convert_motion_namespaces(text: str) -> tuple[str, int]:
     count = 0
-    for source, target in MOTION_NAMESPACE_REPLACEMENTS:
+    for source, target in LEGACY_MOTION_NAMESPACE_REPLACEMENTS:
         if source in text:
             text = text.replace(source, target)
             count += 1
-    return text, count
+    parts: list[str] = []
+    for is_code, segment in split_code(text):
+        if is_code:
+            segment, replaced = _MOTION_SYMBOL_RE.subn(lambda m: _MOTION_TARGETS[m.group(1)], segment)
+            count += replaced
+        parts.append(segment)
+    return "".join(parts), count
 
 
 def ensure_final_newline(text: str) -> str:

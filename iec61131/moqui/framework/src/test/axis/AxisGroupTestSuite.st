@@ -49,7 +49,7 @@
 	     * Inspect in online monitor after testFailed - shows the real MCS coordinates
 	     * to use as posCartA. Persists after testFailed since it is not cleared.
 	     *)
-	    posActualAtHome : SM3_Robotics.SMC_POS_REF;
+	    posActualAtHome : SMC_POS_REF;
 	    (*
 	     * cpRetried - Continuous path movements retried: set TRUE after the first SMC_CP_CONFIGS_DIFFER (12125) auto-reset.
 	     * Guards against infinite retry loops and is used by the watchdog to stay
@@ -67,12 +67,12 @@
 	     * Axes must be powered by the caller before AxisGroup.groupEnable is asserted.
 	     * MC_Power is called every cycle; Status goes TRUE once the drive is ready.
 	     *)
-	    pwJ1 : SM3_Basic.MC_Power;
-	    pwJ2 : SM3_Basic.MC_Power;
-	    pwJ3 : SM3_Basic.MC_Power;
-	    pwJ4 : SM3_Basic.MC_Power;
-	    pwJ5 : SM3_Basic.MC_Power;
-	    pwJ6 : SM3_Basic.MC_Power;
+	    pwJ1 : MC_Power;
+	    pwJ2 : MC_Power;
+	    pwJ3 : MC_Power;
+	    pwJ4 : MC_Power;
+	    pwJ5 : MC_Power;
+	    pwJ6 : MC_Power;
 	    allAxesPowered : BOOL; (* TRUE when all six drives report Status = TRUE *)
 	    (*
 	     * SMC_GroupPower - MUST be called from the bus task (AxisGroupTestSuiteTask).
@@ -80,7 +80,7 @@
 	     * MC_MoveLinearAbsolute / MC_MoveLinearRelative / MC_MoveCircularAbsolute.
 	     * Without it, those FBs fail with SMC_CP_CONFIGS_DIFFER (error 12125).
 	     *)
-	    powerGroup : SM3_Robotics.SMC_GroupPower;
+	    powerGroup : SMC_GroupPower;
 	    groupCpReady : BOOL; (* TRUE when SMC_GroupPower.Status = TRUE *)
 	    (*
 	     * Target positions.
@@ -94,19 +94,19 @@
 	     * SMC_POS_REF is a union; .v[] is the generic ARRAY[0..MAX_KIN_AXES-1] OF LREAL
 	     * member and maps to axis / Cartesian values according to the CoordSystem used.
 	     *)
-	    posHome : SM3_Robotics.SMC_POS_REF;
-	    posA : SM3_Robotics.SMC_POS_REF;
-	    posDelta : SM3_Robotics.SMC_POS_REF;
-	    negDelta : SM3_Robotics.SMC_POS_REF;
-	    posCartA : SM3_Robotics.SMC_POS_REF;
-	    cartDelta : SM3_Robotics.SMC_POS_REF;
+	    posHome : SMC_POS_REF;
+	    posA : SMC_POS_REF;
+	    posDelta : SMC_POS_REF;
+	    negDelta : SMC_POS_REF;
+	    posCartA : SMC_POS_REF;
+	    cartDelta : SMC_POS_REF;
 	    (*
 	     * posNonSingular - joint-space pose used as a stepping stone before CP moves.
 	     * All joints = 0° puts the wrist at B = 180° (Euler singularity); the CP
 	     * planner then hangs without completing or erroring.  Setting A4 = 90° shifts
 	     * B to ~90°, giving a well-conditioned TCP orientation for linear moves.
 	     *)
-	    posNonSingular : SM3_Robotics.SMC_POS_REF;
+	    posNonSingular : SMC_POS_REF;
 	    (*
 	     * CP (linear / circular) move targets - computed dynamically at step entry.
 	     *
@@ -119,12 +119,12 @@
 	     * posCircRelEnd - circular relative endpoint: (0, -50, 0) returns to posCpBase Y.
 	     * posCircRelVia - via-point for the return arc: (-35, -25, 0).
 	     *)
-	    posCpBase : SM3_Robotics.SMC_POS_REF;
-	    posLinTarget : SM3_Robotics.SMC_POS_REF;
-	    posCircEnd : SM3_Robotics.SMC_POS_REF;
-	    posCircVia : SM3_Robotics.SMC_POS_REF;
-	    posCircRelEnd : SM3_Robotics.SMC_POS_REF;
-	    posCircRelVia : SM3_Robotics.SMC_POS_REF;
+	    posCpBase : SMC_POS_REF;
+	    posLinTarget : SMC_POS_REF;
+	    posCircEnd : SMC_POS_REF;
+	    posCircVia : SMC_POS_REF;
+	    posCircRelEnd : SMC_POS_REF;
+	    posCircRelVia : SMC_POS_REF;
 	    (*
 	     * Trajectory following test (steps 80-82).
 	     * trj is populated inline in step 81 from posCpBase (actual TCP at posNonSingular).
@@ -275,7 +275,7 @@
 	    1 :
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posHome;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF grp.commandExecuted THEN
 	            pass[1] := TRUE; step := 2; cycles := 0;
 	        END_IF;
@@ -284,7 +284,7 @@
 	    2 :
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posA;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[2] := TRUE; step := 3; cycles := 0;
 	        END_IF;
@@ -293,7 +293,7 @@
 	    3 :
 	        grp.cmd := AxisGroupCmd.MoveDirectRelative;
 	        grp.endPoint := posDelta;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[3] := TRUE; step := 4; cycles := 0;
 	        END_IF;
@@ -306,7 +306,7 @@
 	    4 :
 	        grp.cmd := AxisGroupCmd.MoveDirectRelative;
 	        grp.endPoint := negDelta;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[4] := TRUE; step := 45; cycles := 0;
 	        END_IF;
@@ -319,7 +319,7 @@
 	    45 :
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posHome;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            step := 46; cycles := 0;
 	        END_IF;
@@ -334,7 +334,7 @@
 	    46 :
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posNonSingular;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            step := 5; cycles := 0;
 	        END_IF;
@@ -378,7 +378,7 @@
 	        END_IF;
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posCartA;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[5] := TRUE; step := 6; cycles := 0;
 	        END_IF;
@@ -390,7 +390,7 @@
 	    6 :
 	        grp.cmd := AxisGroupCmd.MoveDirectRelative;
 	        grp.endPoint := cartDelta;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[6] := TRUE; step := 60; cycles := 0;
 	        END_IF;
@@ -412,7 +412,7 @@
 	    60 :
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posNonSingular;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            step := 61; cycles := 0;
 	        END_IF;
@@ -429,7 +429,7 @@
 	        END_IF;
 	        grp.cmd := AxisGroupCmd.MoveLinearAbsolute;
 	        grp.endPoint := posLinTarget;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[7] := TRUE; step := 62; cycles := 0;
 	        END_IF;
@@ -440,7 +440,7 @@
 	    62 :
 	        grp.cmd := AxisGroupCmd.MoveLinearRelative;
 	        grp.endPoint := cartDelta;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[8] := TRUE; step := 63; cycles := 0;
 	        END_IF;
@@ -451,7 +451,7 @@
 	    63 :
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posNonSingular;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            step := 64; cycles := 0;
 	        END_IF;
@@ -475,8 +475,8 @@
 	        grp.cmd := AxisGroupCmd.MoveCircularAbsolute;
 	        grp.endPoint := posCircEnd;
 	        grp.auxPoint := posCircVia;
-	        grp.circMode := SM3_Robotics.SMC_CIRC_MODE.BORDER;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.circMode := SMC_CIRC_MODE.BORDER;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[9] := TRUE; step := 65; cycles := 0;
 	        END_IF;
@@ -491,8 +491,8 @@
 	        grp.cmd := AxisGroupCmd.MoveCircularRelative;
 	        grp.endPoint := posCircRelEnd;
 	        grp.auxPoint := posCircRelVia;
-	        grp.circMode := SM3_Robotics.SMC_CIRC_MODE.BORDER;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.circMode := SMC_CIRC_MODE.BORDER;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            pass[10] := TRUE; step := 70; cycles := 0;
 	        END_IF;
@@ -507,10 +507,10 @@
 	     * Also resets bufferMode to aborting so each test starts from a known state.
 	     *)
 	    70 :
-	        grp.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
+	        grp.bufferMode := MC_BUFFER_MODE.aborting;
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posNonSingular;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            step := 71; cycles := 0;
 	        END_IF;
@@ -533,8 +533,8 @@
 	            posLinTarget := grp.actualPosition;
 	            posLinTarget.v[0] := posLinTarget.v[0] + 50.0;
 	        END_IF;
-	        grp.bufferMode := SM3_Basic.MC_BUFFER_MODE.Buffered;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.bufferMode := MC_BUFFER_MODE.Buffered;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF cycles < 5 THEN
 	            grp.cmd := AxisGroupCmd.MoveLinearAbsolute;
 	            grp.endPoint := posLinTarget;
@@ -549,10 +549,10 @@
 
 	    (* 72 (internal): Reset bufferMode to aborting; return to posNonSingular before override test. *)
 	    72 :
-	        grp.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
+	        grp.bufferMode := MC_BUFFER_MODE.aborting;
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posNonSingular;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            step := 73; cycles := 0;
 	        END_IF;
@@ -575,7 +575,7 @@
 	        grp.jerkFactor := 1.0;
 	        grp.cmd := AxisGroupCmd.MoveLinearAbsolute;
 	        grp.endPoint := posLinTarget;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            grp.overrideEnable := FALSE;
 	            pass[15] := TRUE; step := 74; cycles := 0;
@@ -586,7 +586,7 @@
 	        grp.overrideEnable := FALSE;
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posNonSingular;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            step := 75; cycles := 0;
 	        END_IF;
@@ -607,7 +607,7 @@
 	        grp.velocity := 0.0; (* Override default 30.0 - zero velocity is an invalid parameter *)
 	        grp.cmd := AxisGroupCmd.MoveLinearAbsolute;
 	        grp.endPoint := posLinTarget;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.MCS;
 	        IF grp.groupError THEN
 	            step := 76; cycles := 0;
 	        END_IF;
@@ -658,12 +658,12 @@
 	     *)
 	    80 :
 	        grp.velocity := 30.0;
-	        grp.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
-	        grp.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+	        grp.bufferMode := MC_BUFFER_MODE.aborting;
+	        grp.transitionMode := MC_TRANSITION_MODE.TMNone;
 	        grp.transitionParameter := 0.0;
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posNonSingular;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 AND grp.commandExecuted THEN
 	            step := 81; cycles := 0;
 	        END_IF;
@@ -677,13 +677,13 @@
 
 	        trj.trajectoryId := 'TEST_TRJ_01';
 	        trj.pointCount := 4;
-	        trj.coordSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+	        trj.coordSystem := SMC_COORD_SYSTEM.MCS;
 	        trj.velocity := 30.0;
 	        trj.acceleration := 100.0;
 	        trj.deceleration := 100.0;
 	        trj.jerk := 1000.0;
-	        trj.bufferMode := SM3_Basic.MC_BUFFER_MODE.blendingPrevious;
-	        trj.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMCornerDistance;
+	        trj.bufferMode := MC_BUFFER_MODE.blendingPrevious;
+	        trj.transitionMode := MC_TRANSITION_MODE.TMCornerDistance;
 	        trj.blendingMode := 10.0; (* 10 mm corner radius *)
 
 	        (* pt[0]: +50 mm X *)
@@ -712,8 +712,8 @@
 	        trj.points[3].sequenceNum := 4;  trj.points[3].timeOffsetMs := 0;
 	        trj.points[3].isBreakPoint := FALSE; trj.points[3].hasBlendingOverride := TRUE;
 	        trj.points[3].blendingMode := 20.0;
-	        trj.points[3].bufferMode := SM3_Basic.MC_BUFFER_MODE.blendingPrevious;
-	        trj.points[3].transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMCornerDistance;
+	        trj.points[3].bufferMode := MC_BUFFER_MODE.blendingPrevious;
+	        trj.points[3].transitionMode := MC_TRANSITION_MODE.TMCornerDistance;
 	        trj.points[3].pos := posCpBase;
 
 	        trjIdx := 0;
@@ -746,8 +746,8 @@
 	            cycles := 0;
 	        ELSIF cycles = 1 THEN
 	            IF trj.points[trjIdx].isBreakPoint THEN
-	                grp.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
-	                grp.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+	                grp.bufferMode := MC_BUFFER_MODE.aborting;
+	                grp.transitionMode := MC_TRANSITION_MODE.TMNone;
 	                grp.transitionParameter := 0.0;
 	            ELSIF trj.points[trjIdx].hasBlendingOverride THEN
 	                grp.bufferMode := trj.points[trjIdx].bufferMode;
@@ -794,8 +794,8 @@
 	     * The globals are cleared on commandExecuted and pass[18] is set.
 	     *)
 	    83 :
-	        grp.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
-	        grp.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+	        grp.bufferMode := MC_BUFFER_MODE.aborting;
+	        grp.transitionMode := MC_TRANSITION_MODE.TMNone;
 	        grp.transitionParameter := 0.0;
 	        IF cycles = 1 THEN
 	            grp.velocity := trj.velocity;
@@ -886,12 +886,12 @@
 	     * commandExecuted fires when MC_GroupHalt.Done is received.
 	     *)
 	    7 :
-	        grp.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
-	        grp.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+	        grp.bufferMode := MC_BUFFER_MODE.aborting;
+	        grp.transitionMode := MC_TRANSITION_MODE.TMNone;
 	        grp.transitionParameter := 0.0;
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posHome;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 THEN
 	            step := 8; cycles := 0;
 	        END_IF;
@@ -911,7 +911,7 @@
 	    9 :
 	        grp.cmd := AxisGroupCmd.MoveDirectAbsolute;
 	        grp.endPoint := posA;
-	        grp.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.ACS;
+	        grp.coordinateSystem := SMC_COORD_SYSTEM.ACS;
 	        IF cycles > 1 THEN
 	            step := 10; cycles := 0;
 	        END_IF;

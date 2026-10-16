@@ -94,18 +94,18 @@ VAR_INPUT
     acceleration : REAL; (* [u/s²] *)
     deceleration : REAL; (* [u/s²] *)
     jerk : REAL; (* [u/s³] *)
-    bufferMode : SM3_Basic.MC_BUFFER_MODE := SM3_Basic.MC_BUFFER_MODE.aborting; (* PLCopen buffer mode for queued commands *)
-    direction : SM3_Basic.MC_Direction := SM3_Basic.MC_DIRECTION.positive; (* mcPositiveDirection / mcNegativeDirection / mcCurrentDirection *)
+    bufferMode : MC_BUFFER_MODE := MC_BUFFER_MODE.aborting; (* PLCopen buffer mode for queued commands *)
+    direction : MC_Direction := MC_DIRECTION.positive; (* mcPositiveDirection / mcNegativeDirection / mcCurrentDirection *)
 
     (* Homing *)
     homePosition : REAL := 0.0;
 
     (* Auxiliary structs and function blocks *)
-    master : REFERENCE TO SM3_Basic.AXIS_REF_SM3;
-    triggerInput : REFERENCE TO SM3_Basic.TRIGGER_REF; (* Hardware trigger for MC_TouchProbe / MC_AbortTrigger *)
-    positionProfile : REFERENCE TO SM3_Basic.MC_TP_REF;
-    velocityProfile : REFERENCE TO SM3_Basic.MC_TV_REF;
-    accelerationProfile : REFERENCE TO SM3_Basic.MC_TA_REF;
+    master : REFERENCE TO AXIS_REF;
+    triggerInput : REFERENCE TO TRIGGER_REF; (* Hardware trigger for MC_TouchProbe / MC_AbortTrigger *)
+    positionProfile : REFERENCE TO MC_TP_REF;
+    velocityProfile : REFERENCE TO MC_TV_REF;
+    accelerationProfile : REFERENCE TO MC_TA_REF;
 
     (* Gear synchronization *)
     ratioNumerator : DINT := 1;
@@ -116,9 +116,9 @@ VAR_INPUT
     slaveSyncPos : LREAL := 0.0; (* Slave position at which synchronization occurs *)
 
     (* CamIn - caller must register cam table via MC_CamTableSelect externally and provide the resulting ID *)
-    camId : SM3_Basic.MC_CAM_ID; (* MC_CAM_ID returned by MC_CamTableSelect *)
+    camId : MC_CAM_ID; (* MC_CAM_ID returned by MC_CamTableSelect *)
     camVersion : DWORD := 0;  (* Increment when camId changes to trigger cam re-sync in CheckCamState *)
-    startMode : SM3_Basic.MC_STARTMODE := SM3_Basic.MC_STARTMODE.absolute;
+    startMode : MC_STARTMODE := MC_STARTMODE.absolute;
     masterOffset : LREAL := 0.0;
     slaveOffset : LREAL := 0.0;
 
@@ -153,7 +153,7 @@ VAR_INPUT
 END_VAR
 VAR_IN_OUT
     axisEnable : BOOL; (* Caller requests initialization by setting TRUE; FB clears when homing is complete *)
-    slave : SM3_Basic.AXIS_REF_SM3;
+    slave : AXIS_REF;
 END_VAR
 VAR_OUTPUT
     ready : BOOL; (* Axis homed, in Ready state, accepts commands *)
@@ -186,7 +186,7 @@ VAR
     oldRatioNumerator : DINT;
     oldRatioDenominator : DINT;
     oldCamVersion : DWORD;
-    oldStartMode : SM3_Basic.MC_STARTMODE;
+    oldStartMode : MC_STARTMODE;
     oldMasterOffset : LREAL;
     oldSlaveOffset : LREAL;
 
@@ -199,7 +199,7 @@ VAR
     pendingOldRatioNumerator : DINT;
     pendingOldRatioDenominator : DINT;
     pendingOldCamVersion : DWORD;
-    pendingOldStartMode : SM3_Basic.MC_STARTMODE;
+    pendingOldStartMode : MC_STARTMODE;
     pendingOldMasterOffset : LREAL;
     pendingOldSlaveOffset : LREAL;
 
@@ -240,52 +240,52 @@ VAR
     abortTriggerExecute : BOOL;
 
     (* PLCopen MC FBs - Administrative / Configuration *)
-    power : SM3_Basic.MC_Power;
-    resetCmd : SM3_Basic.MC_Reset;
-    setPosition : SM3_Basic.MC_SetPosition;
+    power : MC_Power;
+    resetCmd : MC_Reset;
+    setPosition : MC_SetPosition;
 
     (* PLCopen MC FBs - Motion *)
-    home : SM3_Basic.MC_Home;
-    moveVelocity : SM3_Basic.MC_MoveVelocity;
-    moveAbsolute : SM3_Basic.MC_MoveAbsolute;
-    moveRelative : SM3_Basic.MC_MoveRelative;
-    moveAdditive : SM3_Basic.MC_MoveAdditive;
-    moveSuperimposed : SM3_Basic.MC_MoveSuperImposed;
-    halt : SM3_Basic.MC_Halt;
-    haltSuperimposed : SM3_Basic.MC_HaltSuperImposed;
-    stop : SM3_Basic.MC_Stop;
-    jog : SM3_Basic.MC_Jog;
-    setOverride : SM3_Basic.MC_SetOverride;
+    home : MC_Home;
+    moveVelocity : MC_MoveVelocity;
+    moveAbsolute : MC_MoveAbsolute;
+    moveRelative : MC_MoveRelative;
+    moveAdditive : MC_MoveAdditive;
+    moveSuperimposed : MC_MoveSuperImposed;
+    halt : MC_Halt;
+    haltSuperimposed : MC_HaltSuperImposed;
+    stop : MC_Stop;
+    jog : MC_Jog;
+    setOverride : MC_SetOverride;
 
     (* PLCopen MC FBs - Master/Slave synchronization *)
-    gearIn : SM3_Basic.MC_GearIn;
-    gearInPos : SM3_Basic.MC_GearInPos;
-    gearOut : SM3_Basic.MC_GearOut;
-    camIn : SM3_Basic.MC_CamIn;
-    camOut : SM3_Basic.MC_CamOut;
-    phasing : SM3_Basic.MC_Phasing;
+    gearIn : MC_GearIn;
+    gearInPos : MC_GearInPos;
+    gearOut : MC_GearOut;
+    camIn : MC_CamIn;
+    camOut : MC_CamOut;
+    phasing : MC_Phasing;
 
     (* PLCopen MC FBs - Profiles *)
-    mcPositionProfile : SM3_Basic.MC_PositionProfile;
-    mcVelocityProfile : SM3_Basic.MC_VelocityProfile;
-    mcAccProfile : SM3_Basic.MC_AccelerationProfile;
+    mcPositionProfile : MC_PositionProfile;
+    mcVelocityProfile : MC_VelocityProfile;
+    mcAccProfile : MC_AccelerationProfile;
 
     (* PLCopen MC FBs - Parameter access *)
-    readParameter : SM3_Basic.MC_ReadParameter;
-    writeParameter : SM3_Basic.MC_WriteParameter;
-    readBoolParameter : SM3_Basic.MC_ReadBoolParameter;
-    writeBoolParameter : SM3_Basic.MC_WriteBoolParameter;
+    readParameter : MC_ReadParameter;
+    writeParameter : MC_WriteParameter;
+    readBoolParameter : MC_ReadBoolParameter;
+    writeBoolParameter : MC_WriteBoolParameter;
 
     (* PLCopen MC FBs - Additional services *)
-    touchProbe : SM3_Basic.MC_TouchProbe;
-    abortTrigger : SM3_Basic.MC_AbortTrigger;
+    touchProbe : MC_TouchProbe;
+    abortTrigger : MC_AbortTrigger;
 
     (* PLCopen MC FBs - Diagnostics (always enabled) *)
-    readActualPosition : SM3_Basic.MC_ReadActualPosition;
-    readActualVelocity : SM3_Basic.MC_ReadActualVelocity;
-    readActualTorque : SM3_Basic.MC_ReadActualTorque;
-    readAxisError : SM3_Basic.MC_ReadAxisError;
-    readStatus : SM3_Basic.MC_ReadStatus;
+    readActualPosition : MC_ReadActualPosition;
+    readActualVelocity : MC_ReadActualVelocity;
+    readActualTorque : MC_ReadActualTorque;
+    readAxisError : MC_ReadAxisError;
+    readStatus : MC_ReadStatus;
 	(* Logger facade *)
 	logger : LoggerFacade;
 	init : BOOL;
@@ -404,7 +404,7 @@ ELSIF internalStatus = AxisInternalStatus.WaitResetState THEN
         oldDistance := 0.0;
         oldVelocity := 0.0;
         oldCamVersion   := 0;
-        oldStartMode := SM3_Basic.MC_STARTMODE.absolute;
+        oldStartMode := MC_STARTMODE.absolute;
         oldMasterOffset := 0.0;
         oldSlaveOffset := 0.0;
         hasPending := FALSE;
@@ -778,7 +778,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveAbsoluteExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -882,7 +882,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveRelativeExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -986,7 +986,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveAdditiveExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -1090,7 +1090,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveSuperimposedExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -1296,7 +1296,7 @@ ELSE
             END_IF;
 
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     phasingExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -1421,7 +1421,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     haltExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -1542,7 +1542,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     setPositionExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -1635,7 +1635,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     posProfileExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -1728,7 +1728,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     velProfileExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -1821,7 +1821,7 @@ ELSE
                 END_IF;
             END_IF;
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     accProfileExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF

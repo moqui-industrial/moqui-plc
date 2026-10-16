@@ -155,6 +155,37 @@ Changes are made first in the CODESYS project or canonical IEC source, then
 propagated to the platform-specific ports. Files that depend on vendor libraries
 or runtime-specific behavior may be preserved as explicit manual overrides.
 
+### Vendor-neutral motion names
+
+The CODESYS project uses the SoftMotion libraries, whose symbols carry a library
+namespace (`SM3_Basic.MC_Power`, `SM3_Robotics.MC_GroupEnable`). The canonical
+`iec61131/moqui` tree uses the PLCopen Motion Control names without a
+qualifier (`MC_Power`, `MC_GroupEnable`). Two CODESYS reference types take their
+PLCopen names: `AXIS_REF_SM3` becomes `AXIS_REF` and `AXIS_GROUP_REF_SM3`
+becomes `AXES_GROUP_REF`. The remaining `SMC_*` symbols are CODESYS extensions
+and keep their names.
+
+- `scripts/export-codesys.py` strips the qualifiers on export. A qualified
+  symbol that is not in the table stays qualified and is reported at the end of
+  the export. `--keep-codesys-namespaces` disables the mapping.
+- `scripts/codesys_namespaces.py` maps in both directions. Generated CODESYS
+  applications get the qualifiers back when they copy the framework.
+- Only code is mapped: comments, pragmas and string literals are left as written.
+
+Check the canonical tree after editing it by hand:
+
+```bash
+python3 scripts/codesys_namespaces.py check iec61131
+```
+
+### Script configuration
+
+`scripts/moqui_plc_config.py` is the shared configuration of the Python
+scripts: repository paths, export defaults and the CODESYS symbol table. It is
+plain Python data, not TOML, because `export-codesys.py` runs inside the
+CODESYS IronPython 2.7 engine. Skill scripts under `.agents/skills` import it
+from `scripts/`.
+
 `codesys/moqui.projectarchive` is a permanent repository artifact and must always be kept.
 It is not a generated build directory and must not be removed during repository
 cleanup.

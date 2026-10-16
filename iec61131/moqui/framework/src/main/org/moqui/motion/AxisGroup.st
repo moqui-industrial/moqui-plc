@@ -47,14 +47,14 @@ VAR_INPUT
     cmd : AxisGroupCmd := AxisGroupCmd.Idle;
 
     (* Target position - absolute or relative endpoint (MCS / ACS / PCS per coordinateSystem) *)
-    endPoint : SM3_Robotics.SMC_POS_REF;
+    endPoint : SMC_POS_REF;
 
     (* Auxiliary point for circular arc: via-point on arc (mcBorder) or arc centre (mcCenter) *)
-    auxPoint : SM3_Robotics.SMC_POS_REF;
+    auxPoint : SMC_POS_REF;
 
     (* Circular arc definition *)
-    circMode : SM3_Robotics.SMC_CIRC_MODE := SM3_Robotics.SMC_CIRC_MODE.BORDER;
-    pathChoice : SM3_Robotics.MC_CIRC_PATHCHOICE := SM3_Robotics.MC_CIRC_PATHCHOICE.CLOCKWISE;
+    circMode : SMC_CIRC_MODE := SMC_CIRC_MODE.BORDER;
+    pathChoice : MC_CIRC_PATHCHOICE := MC_CIRC_PATHCHOICE.CLOCKWISE;
 
     (* Dynamics - NOT used by MoveDirectAbsolute / MoveDirectRelative *)
     velocity : LREAL; (* [u/s] *)
@@ -63,9 +63,9 @@ VAR_INPUT
     jerk : LREAL; (* [u/s³] *)
 
     (* PLCopen coordinate system and buffer / transition parameters *)
-    coordinateSystem : SM3_Robotics.SMC_COORD_SYSTEM := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
-    bufferMode : SM3_Basic.MC_BUFFER_MODE := SM3_Basic.MC_BUFFER_MODE.aborting;
-    transitionMode : SM3_Robotics.MC_TRANSITION_MODE  := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+    coordinateSystem : SMC_COORD_SYSTEM := SMC_COORD_SYSTEM.MCS;
+    bufferMode : MC_BUFFER_MODE := MC_BUFFER_MODE.aborting;
+    transitionMode : MC_TRANSITION_MODE  := MC_TRANSITION_MODE.TMNone;
     transitionParameter : LREAL := 0.0; (* single scalar: corner distance / max deviation / const velocity *)
 
     (* Override (always active when enabled) *)
@@ -78,7 +78,7 @@ VAR_INPUT
     reset : BOOL;
 END_VAR
 VAR_IN_OUT
-    group : SM3_Robotics.AXIS_GROUP_REF_SM3;
+    group : AXES_GROUP_REF;
     groupEnable : BOOL; (* TRUE = run group; FALSE = power down -> NotPowered *)
 END_VAR
 VAR_OUTPUT
@@ -89,8 +89,8 @@ VAR_OUTPUT
     groupErrorId : DWORD; (* Error code from MC_GroupReadError *)
     groupNotInitialized : BOOL; (* TRUE while NotPowered / WaitPower / Enabling *)
     status : AxisGroupStatus;
-    actualPosition : SM3_Robotics.SMC_POS_REF; (* MCS TCP position, updated every cycle *)
-    actualVelocity : SM3_Robotics.SMC_POS_REF; (* TCP velocity, updated every cycle *)
+    actualPosition : SMC_POS_REF; (* MCS TCP position, updated every cycle *)
+    actualVelocity : SMC_POS_REF; (* TCP velocity, updated every cycle *)
     cmdError : BOOL; (* TRUE = a motion FB triggered the Error state *)
     cmdErrorId : DWORD; (* Error code captured at moment cmdError was set *)
 	(* Logger name for centralized signal management *)
@@ -102,15 +102,15 @@ VAR
 
     (* Change-detection shadow variables *)
     oldCmd : AxisGroupCmd;
-    oldEndPoint : SM3_Robotics.SMC_POS_REF;
-    oldAuxPoint : SM3_Robotics.SMC_POS_REF;
+    oldEndPoint : SMC_POS_REF;
+    oldAuxPoint : SMC_POS_REF;
     oldVelocity : LREAL;
 
     (* One-level pending command slot - PLCopen BufferMode *)
     hasPending : BOOL;
     pendingCmd : AxisGroupCmd;
-    pendingEndPoint : SM3_Robotics.SMC_POS_REF;
-    pendingAuxPoint : SM3_Robotics.SMC_POS_REF;
+    pendingEndPoint : SMC_POS_REF;
+    pendingAuxPoint : SMC_POS_REF;
     pendingVelocity : LREAL;
 
     (* Reset edge detection *)
@@ -138,23 +138,23 @@ VAR
      *)
 
     (* PLCopen Part 4 group management *)
-    enableGroup : SM3_Robotics.MC_GroupEnable;
-    resetGroup : SM3_Robotics.MC_GroupReset;
-    readGroupStatus : SM3_Robotics.MC_GroupReadStatus;
-    readGroupError : SM3_Robotics.MC_GroupReadError;
-    readGroupActPos : SM3_Robotics.MC_GroupReadActualPosition;
-    readGroupActVel : SM3_Robotics.MC_GroupReadActualVelocity;
-    groupSetOverride : SM3_Robotics.MC_GroupSetOverride;
+    enableGroup : MC_GroupEnable;
+    resetGroup : MC_GroupReset;
+    readGroupStatus : MC_GroupReadStatus;
+    readGroupError : MC_GroupReadError;
+    readGroupActPos : MC_GroupReadActualPosition;
+    readGroupActVel : MC_GroupReadActualVelocity;
+    groupSetOverride : MC_GroupSetOverride;
 
     (* PLCopen Part 4 motion FBs *)
-    moveLinearAbsolute : SM3_Robotics.MC_MoveLinearAbsolute;
-    moveLinearRelative : SM3_Robotics.MC_MoveLinearRelative;
-    moveCircularAbsolute : SM3_Robotics.MC_MoveCircularAbsolute;
-    moveCircularRelative : SM3_Robotics.MC_MoveCircularRelative;
-    moveDirectAbsolute : SM3_Robotics.MC_MoveDirectAbsolute;
-    moveDirectRelative : SM3_Robotics.MC_MoveDirectRelative;
-    haltGroup : SM3_Robotics.MC_GroupHalt;
-    stopGroup : SM3_Robotics.MC_GroupStop;
+    moveLinearAbsolute : MC_MoveLinearAbsolute;
+    moveLinearRelative : MC_MoveLinearRelative;
+    moveCircularAbsolute : MC_MoveCircularAbsolute;
+    moveCircularRelative : MC_MoveCircularRelative;
+    moveDirectAbsolute : MC_MoveDirectAbsolute;
+    moveDirectRelative : MC_MoveDirectRelative;
+    haltGroup : MC_GroupHalt;
+    stopGroup : MC_GroupStop;
 
     (* Transition parameter array - PLCopen Part 4 uses ARRAY[1..N] OF LREAL.
        Scalar input transitionParameter is mapped to index [1] each cycle. *)
@@ -441,7 +441,7 @@ ELSE
             END_IF;
 
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveLinearAbsoluteExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -522,7 +522,7 @@ ELSE
             END_IF;
 
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveLinearRelativeExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -602,7 +602,7 @@ ELSE
             END_IF;
 
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveCircularAbsoluteExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -682,7 +682,7 @@ ELSE
             END_IF;
 
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveCircularRelativeExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -761,7 +761,7 @@ ELSE
             END_IF;
 
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveDirectAbsoluteExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -837,7 +837,7 @@ ELSE
             END_IF;
 
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     moveDirectRelativeExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -913,7 +913,7 @@ ELSE
 
             (* MC_GroupHalt is abortable - a new motion command supersedes it *)
             IF cmd <> oldCmd THEN
-                IF bufferMode = SM3_Basic.MC_BUFFER_MODE.aborting OR hasPending THEN
+                IF bufferMode = MC_BUFFER_MODE.aborting OR hasPending THEN
                     groupHaltExecute := FALSE;
                     IF hasPending THEN
                         CASE pendingCmd OF
@@ -1015,14 +1015,14 @@ groupErrorId := readGroupError.GroupErrorID;
 readGroupActPos(
     AxisGroup := group,
     Enable := TRUE,
-    CoordSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS
+    CoordSystem := SMC_COORD_SYSTEM.MCS
 );
 actualPosition := readGroupActPos.Position;
 
 readGroupActVel(
     AxisGroup := group,
     Enable := TRUE,
-    CoordSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS
+    CoordSystem := SMC_COORD_SYSTEM.MCS
 );
 actualVelocity := readGroupActVel.Velocity;
 

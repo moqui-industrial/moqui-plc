@@ -13,7 +13,7 @@ TYPE PickAndPlaceFixture : STRUCT
     conveyorEnable : BOOL;
 
     (* Tripod TCP position - mirrored from AxisGroup.actualPosition each scan. *)
-    tripodActualPos : SM3_Robotics.SMC_POS_REF;
+    tripodActualPos : SMC_POS_REF;
 
     (* Robot FSM flags *)
     robotState : INT;

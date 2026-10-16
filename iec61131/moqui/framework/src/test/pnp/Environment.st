@@ -30,8 +30,8 @@ FUNCTION_BLOCK Environment
 		ring1 : Ring;
 		ring2 : Ring;
 
-		ring1StartPos : SM3_Robotics.MC_COORD_REF := (X :=  75, Y := 100, Z := 0);
-		ring2StartPos : SM3_Robotics.MC_COORD_REF := (X := -75, Y := 100, Z := 0);
+		ring1StartPos : MC_COORD_REF := (X :=  75, Y := 100, Z := 0);
+		ring2StartPos : MC_COORD_REF := (X := -75, Y := 100, Z := 0);
 
 		init : BOOL := TRUE; (* First-scan bootstrap flag *)
 	END_VAR

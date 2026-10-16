@@ -21,10 +21,21 @@ print("Saving IEC 61131-3 source files from the project...")
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
 
-DEFAULT_TARGET_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "st"))
-DEFAULT_AX_SCRIPT = os.path.normpath(os.path.join(SCRIPT_DIR, "convert-iec61131-to-ax.py"))
-DEFAULT_AX_TARGET_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "simatic-ax"))
+try:
+    import moqui_plc_config as config
+    import codesys_namespaces
+except ImportError:
+    raise SystemExit(
+        "moqui_plc_config.py and codesys_namespaces.py were not found in {0}. "
+        "Run export-codesys.py from the moqui-plc scripts directory.".format(SCRIPT_DIR)
+    )
+
+DEFAULT_TARGET_ROOT = os.path.normpath(config.EXPORT_CODESYS_TARGET_ROOT)
+DEFAULT_AX_SCRIPT = os.path.normpath(config.EXPORT_CODESYS_AX_SCRIPT)
+DEFAULT_AX_TARGET_ROOT = os.path.normpath(config.EXPORT_CODESYS_AX_TARGET_ROOT)
 
 TEXTUAL_OUTPUT_EXTENSION = ".st"
 GENERATED_SOURCE_SUFFIXES = (
@@ -120,6 +131,12 @@ def parse_args():
         action="store_false",
         dest="keep_target_data",
         help="Allow cleaning also under data directories in the target root.",
+    )
+    parser.add_argument(
+        "--keep-codesys-namespaces",
+        action="store_true",
+        help="Keep CODESYS library qualifiers (SM3_Basic., SM3_Robotics.) instead of mapping them "
+             "to the vendor-neutral names in moqui_plc_config.py.",
     )
     return parser.parse_args(sys.argv[1:])
 
@@ -612,6 +629,7 @@ class ExportState(object):
         self.temp_dir = tempfile.mkdtemp(prefix="moqui_codesys_export_")
         self.task_infos = []
         self.exported_files = 0
+        self.unknown_codesys_symbols = {}
         self.created_dirs = set()
         self.available_programs = set()
 
@@ -637,6 +655,10 @@ class ExportState(object):
         target_path = os.path.join(target_dir, relevant_parts[-1] + TEXTUAL_OUTPUT_EXTENSION)
         self.ensure_parent_dir(target_path)
         text = sanitize_export_text(text)
+        if not self.args.keep_codesys_namespaces:
+            text, unknown = codesys_namespaces.to_canonical(text)
+            for symbol in unknown:
+                self.unknown_codesys_symbols.setdefault(symbol, []).append(target_path)
         with io.open(target_path, "w", encoding="utf-8", newline="\n") as output_file:
             output_file.write(text)
         self.exported_files += 1
@@ -723,6 +745,11 @@ def main():
         state.close()
 
     print("Export completed. Generated {0} textual IEC/ST files.".format(state.exported_files))
+    if state.unknown_codesys_symbols:
+        print("WARNING: CODESYS library symbols left qualified because they are not in moqui_plc_config.py:")
+        for symbol in sorted(state.unknown_codesys_symbols):
+            print("  {0} ({1} file(s))".format(symbol, len(state.unknown_codesys_symbols[symbol])))
+        print("Add them to CODESYS_LIBRARY_SYMBOLS and export again.")
     try:
         system.ui.info("Export completed successfully.")
     except Exception:

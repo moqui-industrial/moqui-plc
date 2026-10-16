@@ -22,7 +22,7 @@ TYPE Trajectory : STRUCT
     (* Number of valid waypoints; execute points[0..pointCount-1] in order *)
     pointCount : DINT;
     (* Coordinate system applied to all points (MCS for Cartesian, ACS for joint-space) *)
-    coordSystem : SM3_Robotics.SMC_COORD_SYSTEM;
+    coordSystem : SMC_COORD_SYSTEM;
     (* Shared dynamics applied to all CP moves between waypoints *)
     velocity : LREAL; (* [u/s] *)
     acceleration : LREAL; (* [u/s²] *)
@@ -32,12 +32,12 @@ TYPE Trajectory : STRUCT
      * Default PLCopen buffer mode for transitions between non-break points.
      * moqui: ParametricPath.compositionMethodEnumId = PpcmPlcAborting / PpcmPlcBlendingLow / ...
      *)
-    bufferMode : SM3_Basic.MC_BUFFER_MODE;
+    bufferMode : MC_BUFFER_MODE;
     (* 
      * Default PLCopen transition mode (geometric blend shape at the corner).
      * moqui: ParametricPath.compositionMethodEnumId = PpcmPlcTMNone / PpcmPlcTMCornerDist / ...
      *)
-    transitionMode : SM3_Robotics.MC_TRANSITION_MODE;
+    transitionMode : MC_TRANSITION_MODE;
     (*
      * Default blend parameter for TMCornerDistance [mm] or TMConstantVelocity [u/s].
      * moqui: ParametricPathPoint.tolerance (per-point) or trajectory-level default here.

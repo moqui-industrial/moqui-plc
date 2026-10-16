@@ -57,7 +57,7 @@ PROGRAM AxisTestSuite
 	    snapMasterPos : LREAL;
 	    snapSlavePos  : LREAL;
 	    (* Cam test (steps 24-27) *)
-	    camSelect : SM3_Basic.MC_CamTableSelect;
+	    camSelect : MC_CamTableSelect;
 	END_VAR
 
 	(* Slave axis default parameters - overridden per step as needed. *)
@@ -99,7 +99,7 @@ PROGRAM AxisTestSuite
 		1 :
 			slave.cmd := AxisCmd.MoveVelocity;
 			slave.velocity := 5.0;
-			slave.direction := SM3_Basic.MC_Direction.positive;
+			slave.direction := MC_Direction.positive;
 			IF slave.commandExecuted THEN
 				pass[1] := TRUE; step := 2; cycles := 0;
 			END_IF;
@@ -202,7 +202,7 @@ PROGRAM AxisTestSuite
 		11 :
 			slave.cmd := AxisCmd.MoveVelocity;
 			slave.velocity := 3.0;
-			slave.direction := SM3_Basic.MC_Direction.negative;
+			slave.direction := MC_Direction.negative;
 			IF slave.commandExecuted THEN
 				pass[11] := TRUE; step := 12; cycles := 0;
 			END_IF;
@@ -230,7 +230,7 @@ PROGRAM AxisTestSuite
 		14 :
 			slave.cmd := AxisCmd.MoveVelocity;
 			slave.velocity := 20.0;
-			slave.direction := SM3_Basic.MC_Direction.positive;
+			slave.direction := MC_Direction.positive;
 			IF slave.commandExecuted THEN
 				step := 15; cycles := 0;
 			END_IF;
@@ -262,7 +262,7 @@ PROGRAM AxisTestSuite
 		17 :
 			master.cmd := AxisCmd.MoveVelocity;
 			master.velocity := 10.0;
-			master.direction := SM3_Basic.MC_Direction.positive;
+			master.direction := MC_Direction.positive;
 			IF master.commandExecuted THEN
 				pass[15] := TRUE; step := 18; cycles := 0;
 			END_IF;
@@ -378,7 +378,7 @@ PROGRAM AxisTestSuite
 		25 :
 			slave.cmd := AxisCmd.CamIn;
 			slave.camId := camSelect.CamTableID;
-			slave.startMode := SM3_Basic.MC_STARTMODE.absolute;
+			slave.startMode := MC_STARTMODE.absolute;
 			master.cmd := AxisCmd.Idle;
 			IF slave.commandExecuted THEN
 				pass[21] := TRUE; step := 26; cycles := 0;

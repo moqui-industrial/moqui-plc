@@ -26,6 +26,7 @@ REPO_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from ax_port.policy import MOTION_MANUAL_OVERRIDE_STEMS  # noqa: E402
+from codesys_namespaces import TO_CODESYS  # noqa: E402
 
 TEXT_FILE_SUFFIXES = {".pou", ".dut", ".gvl", ".st", ".conf", ".md", ".csv", ".axrecipe", ".txtrecipe"}
 
@@ -86,7 +87,8 @@ TYPE_UNION_RE = re.compile(r"\bTYPE\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*UNION\b")
 
 PATTERN_CHECKS: list[tuple[str, re.Pattern[str]]] = [
     ("codesys_recipe_management", re.compile(r"\bRecipe_Management\b")),
-    ("codesys_motion_namespace", re.compile(r"\bSM3_Basic\b")),
+    ("codesys_motion_namespace", re.compile(r"\bSM3_(?:Basic|Robotics)\b")),
+    ("motion_symbol", re.compile(r"(?<![A-Za-z0-9_.])(?:" + "|".join(sorted(map(re.escape, TO_CODESYS), key=len, reverse=True)) + r")\b")),
     ("attribute_annotation", re.compile(r"\{attribute\s+'[^']+'\}")),
     ("reference_to", re.compile(r"\bREFERENCE\s+TO\b")),
 ]
@@ -447,7 +449,10 @@ def convert_tree(
 def write_report(report_path: Path, reports: list[FileReport], source_root: Path, target_root: Path) -> None:
     changed_files = [r for r in reports if r.changed]
     flagged_files = [r for r in reports if r.patterns]
-    motion_files = [r for r in reports if "codesys_motion_namespace" in r.patterns or "motion" in r.path.parts]
+    motion_files = [
+        r for r in reports
+        if "codesys_motion_namespace" in r.patterns or "motion_symbol" in r.patterns or "motion" in r.path.parts
+    ]
     recipe_backend_files = [r for r in reports if "codesys_recipe_management" in r.patterns]
 
     lines: list[str] = []
@@ -475,6 +480,7 @@ def write_report(report_path: Path, reports: list[FileReport], source_root: Path
     lines.append("")
     lines.append("- `codesys_recipe_management`: CODESYS recipe backend still present")
     lines.append("- `codesys_motion_namespace`: motion namespace still tied to CODESYS/SM3")
+    lines.append("- `motion_symbol`: PLCopen/SoftMotion motion symbol (vendor-neutral name from moqui_plc_config.py) that needs an AX motion mapping")
     lines.append("- `attribute_annotation`: attribute syntax may need AX review")
     lines.append("- `reference_to`: manual review needed if any remained")
     lines.append("- `preserved_manual_ax_override`: target file intentionally kept because it already contains AX-specific manual work")

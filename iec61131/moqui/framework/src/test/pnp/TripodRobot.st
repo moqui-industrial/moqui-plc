@@ -45,8 +45,8 @@ FUNCTION_BLOCK TripodRobot
 		tripodGroup : AxisGroup;
 
 		(* Coordinate transform - direct PLCopen call *)
-		setCoord : SM3_Robotics.MC_SetCoordinateTransform;
-		mcs : SM3_Robotics.MC_COORD_REF;
+		setCoord : MC_SetCoordinateTransform;
+		mcs : MC_COORD_REF;
 
 		(* 200ms ring-following timer (state 60) *)
 		ton : TON := (PT := T#200MS);
@@ -56,10 +56,10 @@ FUNCTION_BLOCK TripodRobot
 		 * All X,Y components default to 0 (struct zero-init).
 		 * Only Z (and coordinate system) distinguishes them.
 	     *)
-		posAboveRingPCS1 : SM3_Robotics.SMC_POS_REF; (* Z = tcpRing, PCS_1 *)
-		posAboveConePCS2 : SM3_Robotics.SMC_POS_REF; (* Z = 200, PCS_2 *)
-		posOnConePCS2 : SM3_Robotics.SMC_POS_REF; (* Z = tcpRing, PCS_2 *)
-		posRestWCS : SM3_Robotics.SMC_POS_REF; (* Z = 300, WCS *)
+		posAboveRingPCS1 : SMC_POS_REF; (* Z = tcpRing, PCS_1 *)
+		posAboveConePCS2 : SMC_POS_REF; (* Z = 200, PCS_2 *)
+		posOnConePCS2 : SMC_POS_REF; (* Z = tcpRing, PCS_2 *)
+		posRestWCS : SMC_POS_REF; (* Z = 300, WCS *)
 	END_VAR
 
 	(* Target positions - set each scan (struct re-init on first scan) *)
@@ -101,7 +101,7 @@ FUNCTION_BLOCK TripodRobot
 			mcs.Z := tripodTransZ;
 			setCoord.Execute := TRUE;
 			setCoord.CoordTransform := mcs;
-			setCoord.CoordSystem := SM3_Robotics.SMC_COORD_SYSTEM.MCS;
+			setCoord.CoordSystem := SMC_COORD_SYSTEM.MCS;
 
 			IF setCoord.Done THEN
 				pnp.coordTransformDone := TRUE;
@@ -119,13 +119,13 @@ FUNCTION_BLOCK TripodRobot
 			IF pnp.ringOnTable THEN
 				tripodGroup.cmd := AxisGroupCmd.MoveLinearAbsolute;
 				tripodGroup.endPoint := posAboveRingPCS1;
-				tripodGroup.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.PCS_1;
+				tripodGroup.coordinateSystem := SMC_COORD_SYSTEM.PCS_1;
 				tripodGroup.velocity := tripodVelocity;
 				tripodGroup.acceleration := tripodAcceleration;
 				tripodGroup.deceleration := tripodAcceleration;
 				tripodGroup.jerk := tripodJerk;
-				tripodGroup.bufferMode := SM3_Basic.MC_BUFFER_MODE.BlendingHigh;
-				tripodGroup.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMCornerDistance;
+				tripodGroup.bufferMode := MC_BUFFER_MODE.BlendingHigh;
+				tripodGroup.transitionMode := MC_TRANSITION_MODE.TMCornerDistance;
 				tripodGroup.transitionParameter := 500;
 				pnp.robotState := 50;
 			END_IF;
@@ -144,9 +144,9 @@ FUNCTION_BLOCK TripodRobot
 				tripodGroup.endPoint.c.X := 0;
 				tripodGroup.endPoint.c.Y := 0;
 				tripodGroup.endPoint.c.Z := 150;
-				tripodGroup.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.WCS;
-				tripodGroup.bufferMode := SM3_Basic.MC_BUFFER_MODE.Buffered;
-				tripodGroup.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+				tripodGroup.coordinateSystem := SMC_COORD_SYSTEM.WCS;
+				tripodGroup.bufferMode := MC_BUFFER_MODE.Buffered;
+				tripodGroup.transitionMode := MC_TRANSITION_MODE.TMNone;
 				tripodGroup.transitionParameter := 0;
 				pnp.robotState := 70;
 			END_IF;
@@ -154,9 +154,9 @@ FUNCTION_BLOCK TripodRobot
 		70 : (* Queue MoveLinearAbsolute to rest (WCS), matching the sample's buffered handoff *)
 			tripodGroup.cmd := AxisGroupCmd.MoveLinearAbsolute;
 			tripodGroup.endPoint := posRestWCS;
-			tripodGroup.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.WCS;
-			tripodGroup.bufferMode := SM3_Basic.MC_BUFFER_MODE.BlendingHigh;
-			tripodGroup.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMCornerDistance;
+			tripodGroup.coordinateSystem := SMC_COORD_SYSTEM.WCS;
+			tripodGroup.bufferMode := MC_BUFFER_MODE.BlendingHigh;
+			tripodGroup.transitionMode := MC_TRANSITION_MODE.TMCornerDistance;
 			tripodGroup.transitionParameter := 500;
 			pnp.robotState := 80;
 
@@ -167,9 +167,9 @@ FUNCTION_BLOCK TripodRobot
 				pnp.targetConePtr := pnp.activeConePtr;
 				tripodGroup.cmd := AxisGroupCmd.MoveLinearAbsolute;
 				tripodGroup.endPoint := posAboveConePCS2;
-				tripodGroup.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.PCS_2;
-				tripodGroup.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
-				tripodGroup.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+				tripodGroup.coordinateSystem := SMC_COORD_SYSTEM.PCS_2;
+				tripodGroup.bufferMode := MC_BUFFER_MODE.aborting;
+				tripodGroup.transitionMode := MC_TRANSITION_MODE.TMNone;
 				tripodGroup.transitionParameter := 0;
 				pnp.robotState := 90;
 			END_IF;
@@ -180,9 +180,9 @@ FUNCTION_BLOCK TripodRobot
 			ELSIF tripodGroup.ready THEN
 				tripodGroup.cmd := AxisGroupCmd.MoveLinearAbsolute;
 				tripodGroup.endPoint := posOnConePCS2;
-				tripodGroup.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.PCS_2;
-				tripodGroup.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
-				tripodGroup.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+				tripodGroup.coordinateSystem := SMC_COORD_SYSTEM.PCS_2;
+				tripodGroup.bufferMode := MC_BUFFER_MODE.aborting;
+				tripodGroup.transitionMode := MC_TRANSITION_MODE.TMNone;
 				tripodGroup.transitionParameter := 0;
 				pnp.robotState := 100;
 			END_IF;
@@ -193,9 +193,9 @@ FUNCTION_BLOCK TripodRobot
 			ELSIF tripodGroup.ready THEN
 				tripodGroup.cmd := AxisGroupCmd.MoveLinearAbsolute;
 				tripodGroup.endPoint := posAboveConePCS2;
-				tripodGroup.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.PCS_2;
-				tripodGroup.bufferMode := SM3_Basic.MC_BUFFER_MODE.Buffered;
-				tripodGroup.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+				tripodGroup.coordinateSystem := SMC_COORD_SYSTEM.PCS_2;
+				tripodGroup.bufferMode := MC_BUFFER_MODE.Buffered;
+				tripodGroup.transitionMode := MC_TRANSITION_MODE.TMNone;
 				tripodGroup.transitionParameter := 0;
 				pnp.robotState := 110;
 			END_IF;
@@ -206,9 +206,9 @@ FUNCTION_BLOCK TripodRobot
 			ELSIF tripodGroup.ready THEN
 				tripodGroup.cmd := AxisGroupCmd.MoveLinearAbsolute;
 				tripodGroup.endPoint := posRestWCS;
-				tripodGroup.coordinateSystem := SM3_Robotics.SMC_COORD_SYSTEM.WCS;
-				tripodGroup.bufferMode := SM3_Basic.MC_BUFFER_MODE.aborting;
-				tripodGroup.transitionMode := SM3_Robotics.MC_TRANSITION_MODE.TMNone;
+				tripodGroup.coordinateSystem := SMC_COORD_SYSTEM.WCS;
+				tripodGroup.bufferMode := MC_BUFFER_MODE.aborting;
+				tripodGroup.transitionMode := MC_TRANSITION_MODE.TMNone;
 				tripodGroup.transitionParameter := 0;
 				pnp.robotState := 120;
 			END_IF;

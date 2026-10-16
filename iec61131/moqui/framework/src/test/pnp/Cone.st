@@ -18,19 +18,19 @@ FUNCTION_BLOCK Cone
 		start : BOOL;
 	END_VAR
 	VAR_OUTPUT
-		pos : SM3_Robotics.MC_COORD_REF;
+		pos : MC_COORD_REF;
 		state : DINT;
 		onBelt : BOOL;
 	END_VAR
 	VAR
-		conveyorBeltOrigin : SM3_Robotics.MC_COORD_REF :=
+		conveyorBeltOrigin : MC_COORD_REF :=
 			(X := beltTransX, Y := beltTransY, Z := beltTransZ);
-		initialConePosition : SM3_Robotics.MC_COORD_REF := (X := -925, Z := 125);
-		tcb : SM3_Robotics.MC_TrackConveyorBelt := (
+		initialConePosition : MC_COORD_REF := (X := -925, Z := 125);
+		tcb : MC_TrackConveyorBelt := (
 			ConveyorBeltOrigin := conveyorBeltOrigin,
 			InitialObjectPosition := initialConePosition,
-			CoordSystem := SM3_Robotics.SMC_COORD_SYSTEM.PCS_2);
-		frame : SM3_Robotics.SMC_Frame;
+			CoordSystem := SMC_COORD_SYSTEM.PCS_2);
+		frame : SMC_Frame;
 		stateOld : DINT;
 	END_VAR
 
@@ -58,7 +58,7 @@ FUNCTION_BLOCK Cone
 	
 			20 : (* Cone on belt - track position until it reaches the exit *)
 				tcb.cs.GetPose(cs := frame, fTime := Tripod1.fTaskCycle);
-				SM3_Robotics.SMC_Frame_To_CoordRef(c := pos, f := frame);
+				SMC_Frame_To_CoordRef(c := pos, f := frame);
 				IF pos.X >= beltTransX + 725 THEN
 					onBelt := FALSE;
 					state := 0;

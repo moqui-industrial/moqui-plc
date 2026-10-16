@@ -38,12 +38,12 @@ TYPE TrajectoryPoint : STRUCT
      * Per-point buffer mode override (active when hasBlendingOverride = TRUE).
      * moqui: TrajectoryPoint.blendingEnumId -> PpcmPlcAborting / PpcmPlcBlendingLow / ...
      *)
-    bufferMode : SM3_Basic.MC_BUFFER_MODE;
+    bufferMode : MC_BUFFER_MODE;
     (*
      * Per-point transition mode override (active when hasBlendingOverride = TRUE).
      * moqui: TrajectoryPoint.blendingEnumId → PpcmPlcTMNone / PpcmPlcTMCornerDist / ...
      *)
-    transitionMode: SM3_Robotics.MC_TRANSITION_MODE;
+    transitionMode: MC_TRANSITION_MODE;
     (* 6-DOF position in the active coordinate system *)
-    pos : SM3_Robotics.SMC_POS_REF;
+    pos : SMC_POS_REF;
 END_STRUCT END_TYPE

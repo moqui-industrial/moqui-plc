@@ -14,23 +14,23 @@ FUNCTION_BLOCK Ring
 	END_VAR
 	VAR_INPUT
 		otherRingPtr : POINTER TO Ring; (* The other ring in the pair *)
-		startPos : SM3_Robotics.MC_COORD_REF; (* Initial position in MCS *)
+		startPos : MC_COORD_REF; (* Initial position in MCS *)
 	END_VAR
 	VAR_OUTPUT
-		pos : SM3_Robotics.MC_COORD_REF;
+		pos : MC_COORD_REF;
 		state  : DINT;
 		onTable : BOOL;
 	END_VAR
 	VAR
 		stateOld : DINT;
-		frame : SM3_Robotics.SMC_Frame;
-		rotaryTableOrigin : SM3_Robotics.MC_COORD_REF :=
+		frame : SMC_Frame;
+		rotaryTableOrigin : MC_COORD_REF :=
 			(X := tableTransX, Y := tableTransY, Z := tableTransZ);
-		initialObjectPosition : SM3_Robotics.MC_COORD_REF := (Y := 400, Z := 30);
-		trt : SM3_Robotics.MC_TrackRotaryTable := (
+		initialObjectPosition : MC_COORD_REF := (Y := 400, Z := 30);
+		trt : MC_TrackRotaryTable := (
 			RotaryTableOrigin := rotaryTableOrigin,
 			initialObjectPosition := initialObjectPosition,
-			CoordSystem := SM3_Robotics.SMC_COORD_SYSTEM.PCS_1);
+			CoordSystem := SMC_COORD_SYSTEM.PCS_1);
 		conePtr : POINTER TO Cone;
 	END_VAR
 
@@ -57,7 +57,7 @@ FUNCTION_BLOCK Ring
 
 		20 : (* Ring on rotary table, spinning - wait until robot is free to pick *)
 			trt.cs.GetPose(cs := frame, fTime := Tripod1.fTaskCycle);
-			SM3_Robotics.SMC_Frame_To_CoordRef(c := pos, f := frame);
+			SMC_Frame_To_CoordRef(c := pos, f := frame);
 
 			IF NOT pnp.ringAttached THEN
 				state := state + 10;
@@ -65,7 +65,7 @@ FUNCTION_BLOCK Ring
 
 		30 : (* Waiting for robot to attach to ring *)
 			trt.cs.GetPose(cs := frame, fTime := Tripod1.fTaskCycle);
-			SM3_Robotics.SMC_Frame_To_CoordRef(c := pos, f := frame);
+			SMC_Frame_To_CoordRef(c := pos, f := frame);
 
 			IF pnp.ringAttached THEN
 				state := state + 10;
