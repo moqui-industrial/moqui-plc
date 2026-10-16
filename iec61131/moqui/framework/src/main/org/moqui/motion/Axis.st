@@ -2266,3 +2266,4 @@ IF __ISVALIDREF(triggerInput) THEN
         TriggerInput := triggerInput
     );
 END_IF
+END_FUNCTION_BLOCK

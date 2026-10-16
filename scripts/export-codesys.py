@@ -225,14 +225,44 @@ def strip_codesys_attributes(text):
     return "\n".join(filtered_lines)
 
 
+def skip_block_comment(text, index):
+    # CODESYS allows nested (* *) comments: track the depth, not the first closing marker.
+    depth = 0
+    length = len(text)
+    while index < length:
+        pair = text[index : index + 2]
+        if pair == "(*":
+            depth += 1
+            index += 2
+        elif pair == "*)":
+            depth -= 1
+            index += 2
+            if depth == 0:
+                return index
+        else:
+            index += 1
+    return -1
+
+
 def strip_leading_comments_and_whitespace(text):
     working = text.lstrip()
-    while working.startswith("(*"):
-        closing_index = working.find("*)")
-        if closing_index < 0:
-            break
-        working = working[closing_index + 2 :].lstrip()
-    return working
+    while True:
+        if working.startswith("(*"):
+            end_index = skip_block_comment(working, 0)
+        elif working.startswith("/*"):
+            closing_index = working.find("*/", 2)
+            end_index = closing_index + 2 if closing_index >= 0 else -1
+        elif working.startswith("//"):
+            newline_index = working.find("\n")
+            end_index = newline_index if newline_index >= 0 else len(working)
+        elif working.startswith("{"):
+            closing_index = working.find("}")
+            end_index = closing_index + 1 if closing_index >= 0 else -1
+        else:
+            return working
+        if end_index < 0:
+            return working
+        working = working[end_index:].lstrip()
 
 
 def detect_textual_closing_keyword(declaration):

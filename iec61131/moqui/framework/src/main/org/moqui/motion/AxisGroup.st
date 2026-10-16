@@ -1139,3 +1139,4 @@ stopGroup(
     Deceleration := deceleration,
     Jerk := jerk
 );
+END_FUNCTION_BLOCK

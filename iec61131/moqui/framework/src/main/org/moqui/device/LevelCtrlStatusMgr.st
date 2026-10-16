@@ -195,3 +195,4 @@ CASE status OF
 			status := LevelCtrlStatus.Dormant;
 		END_IF;
 END_CASE;
+END_FUNCTION_BLOCK

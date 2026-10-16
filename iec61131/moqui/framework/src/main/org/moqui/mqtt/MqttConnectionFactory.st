@@ -51,7 +51,7 @@ FUNCTION_BLOCK MqttConnectionFactory
 			(* userProperties := willUserProperties *)
 	    );
 		(* TLS context *)
-		cipherList : NBS.CIPHER_LIST := STRUCT(psList := ADR('HIGH'), udiSize := 5);
+		cipherList : NBS.CIPHER_LIST := (psList := ADR('HIGH'), udiSize := 5);
 		commonName : STRING := 'moqui';
 	    certInfo : NBS.CERT_INFO := (psInfo := ADR(commonName), udiSize := INT_TO_UDINT(LEN(commonName)));
 		defaultTlsContext : NBS.TLSContext := (
@@ -72,7 +72,7 @@ FUNCTION_BLOCK MqttConnectionFactory
 	     * To use client certificates, configure the connection via the TLS context.
 		 * Example:
 		 *      commonName : STRING := 'COMMON_NAME_OF_CERTIFICATE'; // CN of the certificate (common name). 
-		 *      cipherList : NBS.CIPHER_LIST := STRUCT(psList := ADR('HIGH'), udiSize := 5); // Cipher string see https://www.openssl.org/docs/man1.1.1/man1/ciphers.html
+		 *      cipherList : NBS.CIPHER_LIST := (psList := ADR('HIGH'), udiSize := 5); // Cipher string see https://www.openssl.org/docs/man1.1.1/man1/ciphers.html
 		 *      certInfo : NBS.CERT_INFO := (psInfo := ADR(commonName), udiSize := SIZEOF(commonName)); // CN of the certificate (common name)
 		 *      tlsContext : NBS.TLSContext := (
 		 *          sUseCaseName := commonName, // A certificate is stored in the certificate store with the use case name.
