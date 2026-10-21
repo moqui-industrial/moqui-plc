@@ -110,8 +110,6 @@ Optional but strongly recommended when the application also uses
 - `gatewayName`
 - optional `gatewayDeviceTypeEnumId`
 - optional `gatewayMemberPurposeEnumId`
-- `restBaseUri` used by Moqui to invoke the standalone gateway
-- positive `restTimeoutSeconds`
 - `scopedSubsystemIds`
 - optional `scopedDeviceIds`
 - optional notes
