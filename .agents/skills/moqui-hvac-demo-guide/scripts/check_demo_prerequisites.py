@@ -85,6 +85,7 @@ def main() -> int:
     required_files = {
         "codesys-project": workspace / "moqui-plc" / "codesys" / "moqui.projectarchive",
         "hvac-seed": workspace / "moqui-device" / "data" / "HVACDemoData.xml",
+        "hvac-gateway-demo-data": workspace / "moqui-device" / "data" / "HVACDemoGatewayData.xml",
         "artemis-compose": workspace / "moqui-deploy" / "industrial" / "activemq-compose.yml",
         "postgres-compose": workspace / "moqui-deploy" / "industrial" / "moqui-postgres-compose.yml",
     }
@@ -103,7 +104,9 @@ def main() -> int:
     docker_ok, docker_detail = docker_status(commands["docker"])
     checks.append({"check": "docker-daemon", "ok": docker_ok, "detail": docker_detail})
 
-    ports = {5432: "PostgreSQL", 1883: "MQTT", 8081: "gateway", 8161: "Artemis console"}
+    # on MR-Moqui the gateway runs inside Moqui (8080); the Quarkus gateway listens on 8081
+    gateway_port = (8081, "Quarkus gateway") if args.gateway_runtime == "quarkus" else (8080, "Moqui with the gateway")
+    ports = {5432: "PostgreSQL", 1883: "MQTT", gateway_port[0]: gateway_port[1], 8161: "Artemis console"}
     port_state = {str(port): {"service": service, "in_use": port_in_use(port)} for port, service in ports.items()}
 
     result = {

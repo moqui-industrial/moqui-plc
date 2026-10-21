@@ -10,12 +10,13 @@ Load this reference only after a checkpoint fails. Use the root
 - On Windows, inspect mounted Artemis shell/config files for CRLF problems.
 - Confirm the development credentials only in local configuration.
 
-## Gateway health down
+## Subscription not started
 
-- Verify both datasource URLs and PostgreSQL availability.
-- Verify `GATEWAY_DEVICE_ID=HVAC_DEMO_GATEWAY`.
-- Verify the HVAC seed exists in the database.
-- Read the actual gateway HTTP port from startup output for the selected Rust or Java branch.
+- Read the Moqui log for `Device gateway subscription ... did not start`.
+- Verify `MQTT_USERNAME` and `MQTT_PASSWORD` in the environment of the Moqui
+  process, and that `HVACDemoGatewayData.xml` was loaded.
+- Verify the HVAC seed exists in the database and the broker is reachable.
+- `start#Subscriptions` retries a lost subscription every minute.
 
 ## Gateway request publishes zero rows
 

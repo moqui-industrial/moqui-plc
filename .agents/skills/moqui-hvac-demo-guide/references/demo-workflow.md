@@ -31,7 +31,9 @@ Evidence: all required command-line and repository checks pass.
 ### B. Database and model
 
 - Start the documented PostgreSQL service.
-- Load `seed-initial` before regular `seed` if the database is new.
+- Load `seed-initial` before regular `seed` if the database is new, then
+  `moqui-device/data/HVACDemoGatewayData.xml` (demo data: broker connection and
+  PLC log subscription).
 - Verify the HVAC device and live request-item counts with the README queries.
 - Explain any local SQL credential/request override before applying it.
 
@@ -47,14 +49,15 @@ queryable from PostgreSQL.
 Evidence: the primary broker is healthy and the observer remains subscribed to
 both the PLC-log and HVAC live-parameter topics.
 
-### D. Gateway
+### D. Moqui with the gateway
 
-- Start the gateway with the documented local environment.
-- Check the actual listening port from startup output before assuming `8081`.
-- Verify `/q/health` and the modeled gateway identity.
+- Start MR-Moqui with `moqui-device-gateway` installed and `MQTT_USERNAME` /
+  `MQTT_PASSWORD` in its environment, as documented.
+- Wait for the service job `start_DeviceGatewaySubscriptions` (one minute).
 
-Evidence: health reports `UP` and startup discovers the HVAC scope without a
-hidden route list.
+Evidence: the Moqui log reports the started subscriptions and
+`get#SubscriptionState` lists `HVAC_DEMO_PlcLogSubscribe`; the subscriptions come
+from the modeled requests, without a hidden route list.
 
 ### E. CODESYS
 
@@ -81,11 +84,12 @@ expected PLC variable changes.
 ### G. Modeled outbound request
 
 - Set a recognizable Moqui parameter value as documented.
-- Invoke `HVAC_DEMO_LiveParametersWrite` through the gateway REST endpoint.
+- Run `moqui.device.DeviceServices.run#DeviceRequest` for
+  `HVAC_DEMO_LiveParametersWrite` (Tools app, Service Run).
 - Observe the MQTT messages and CODESYS variable.
 
-Evidence: the request completes with the expected row count and CODESYS applies
-the recognizable value.
+Evidence: the result has `status = completed` and 20 `itemResults`, and CODESYS
+applies the recognizable value.
 
 ### H. PLC return path
 
