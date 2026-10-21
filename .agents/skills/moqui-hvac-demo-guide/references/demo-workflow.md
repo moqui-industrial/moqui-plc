@@ -51,8 +51,9 @@ both the PLC-log and HVAC live-parameter topics.
 
 ### D. Moqui with the gateway
 
-- Start MR-Moqui with `moqui-device-gateway` installed and `MQTT_USERNAME` /
-  `MQTT_PASSWORD` in its environment, as documented.
+- Start MR-Moqui with `moqui-device-gateway` installed and
+  `device_gateway_device_id=HVAC_DEMO_GATEWAY`, `MQTT_USERNAME` and `MQTT_PASSWORD`
+  in its environment, as documented.
 - Wait for the service job `start_DeviceGatewaySubscriptions` (one minute).
 
 Evidence: the Moqui log reports the started subscriptions and

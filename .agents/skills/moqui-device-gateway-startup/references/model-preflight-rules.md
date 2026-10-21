@@ -15,7 +15,11 @@ Before first startup, the seed should be checked with these rules.
 - each target PLC/controller that the gateway should serve must belong to one of
   the same groups
 - a gateway request whose PLC is outside the gateway scope is reported by the
-  startup guide; fix the group membership in the model
+  startup guide and refused by the gateway when `device_gateway_device_id` is
+  set; fix the group membership in the model
+- only members with a controller purpose (`DgmpProcessPLC`, `DgmpSafetyPLC`,
+  `DgmpController`, `DgmpMotionController`, remote I/O) and membership status
+  empty or `DgmsAlive` have their subscriptions restored
 
 ## Requests
 

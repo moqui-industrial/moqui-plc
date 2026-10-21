@@ -479,12 +479,15 @@ export entity_ds_db_conf=postgres entity_ds_host=127.0.0.1 entity_ds_port=5432
 export entity_ds_database=moqui entity_ds_user=moqui entity_ds_password=moqui
 export entity_ds_sslmode=disable  # local demo only
 export MQTT_USERNAME=artemis MQTT_PASSWORD=artemis
+export device_gateway_device_id=HVAC_DEMO_GATEWAY
 ./moq run --debug
 ```
 
-Within a minute of the start, the service job `start_DeviceGatewaySubscriptions`
-starts the active subscriptions, here `HVAC_DEMO_PlcLogSubscribe` on the
-`moqui-plc` topic. The Moqui log reports `Device gateway subscriptions started:
+`device_gateway_device_id` is the gateway this Moqui instance is: `HVAC_DEMO_GATEWAY`,
+the `DgmpEdgeGateway` member of the `HVAC_DEMO` group. Within a minute of the
+start, the service job `start_DeviceGatewaySubscriptions` starts the active
+subscriptions of the controllers in its scope, here `HVAC_DEMO_PlcLogSubscribe`
+on the `moqui-plc` topic. Requests for devices outside that scope are refused. The Moqui log reports `Device gateway subscriptions started:
 1, failed: 0`; `moqui.device.gateway.SubscriptionServices.get#SubscriptionState`
 (Tools app, Service Run) lists it in `activeRequestNames`. Request an initial
 full live snapshot in this local demo:
@@ -637,8 +640,9 @@ The first query should contain the value most recently observed by
   occupied, credentials are `artemis/artemis`, and `mosquitto_sub` was started
   before publishing.
 - **No subscription started:** check the Moqui log for `Device gateway
-  subscription ... did not start`: usually `MQTT_USERNAME`/`MQTT_PASSWORD` are
-  missing from the Moqui environment, or `HVACDemoGatewayData.xml` was not
+  subscription ... did not start` or `subscriptions are not restored`: usually
+  `device_gateway_device_id=HVAC_DEMO_GATEWAY` or `MQTT_USERNAME`/`MQTT_PASSWORD`
+  are missing from the Moqui environment, or `HVACDemoGatewayData.xml` was not
   loaded. `start#Subscriptions` retries a lost subscription every minute.
 - **The write publishes nothing:** for this isolated first-snapshot test verify
   that `only_changed_parameters='N'`. Normal production operation should update

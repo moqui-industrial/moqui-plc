@@ -321,14 +321,17 @@ def render_guide(seed_path: Path, output_path: Path, analysis: dict, gateway_run
             lines.append("./moq build")
             lines.append("./moq load seed-initial seed")
             lines.append(f"./moq load -l {shlex.quote(str(seed_path))}")
-            lines.append("./moq run")
+            lines.append(f"device_gateway_device_id={shlex.quote(gateway_id)} ./moq run")
             lines.append("```")
             lines.append("")
             lines.append("### Readiness check")
             lines.append("")
             lines.append(
-                "- The service job `start_DeviceGatewaySubscriptions` starts the subscriptions within a minute of the "
-                "start; `moqui.device.gateway.SubscriptionServices.get#SubscriptionState` lists the running ones."
+                f"- `device_gateway_device_id` makes this Moqui instance the gateway `{gateway_id}`: the service job "
+                "`start_DeviceGatewaySubscriptions` starts the subscriptions of the controllers in its scope within a "
+                "minute of the start, and requests outside its scope are refused. "
+                "`moqui.device.gateway.SubscriptionServices.get#StartupSubscriptions` lists what it starts, "
+                "`get#SubscriptionState` what runs."
             )
             lines.append("- Gateway failures are in the Moqui log (runtime/log).")
             lines.append("")
